@@ -11,6 +11,12 @@ namespace MemeIum.Services
 {
     class P2PServer : IP2PServer
     {
+        public readonly ILogger Logger;
+
+        public P2PServer()
+        {
+            Logger = Services.GetService<ILogger>();
+        }
 
         public void Start()
         {
@@ -26,7 +32,7 @@ namespace MemeIum.Services
 
             byte[] message = socket.EndReceive(result, ref source);
             var msgStr = Encoding.UTF8.GetString(message);
-            Console.WriteLine("Msg: {0}, From : {1}", msgStr, source.Address.ToString());
+            Logger.Log(String.Format("Msg: {0}, From : {1}", msgStr, source.Address.ToString()));
 
             try
             {
@@ -34,9 +40,9 @@ namespace MemeIum.Services
             }
             catch (Exception e)
             {
-                Console.WriteLine("Caught While parsing: {0}",e.ToString());
+                Logger.Log(String.Format("Caught While parsing: {0}",e.ToString()));
             }
-
+            
             socket.BeginReceive(new AsyncCallback(OnUdpData), socket);
 
         }
@@ -44,7 +50,7 @@ namespace MemeIum.Services
         private void ParseRequest(string request,IPEndPoint source)
         {
             var header = JsonConvert.DeserializeObject<RequestHeader>(request);
-            Console.WriteLine("V:{0},T:{1}",header.Version,header.Type);
+            Logger.Log(String.Format("V:{0},T:{1}",header.Version,header.Type));
 
             if (header.Type == 0)
             {

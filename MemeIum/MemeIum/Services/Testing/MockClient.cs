@@ -10,16 +10,17 @@ namespace MemeIum.Services
 {
     class MockClient
     {
+        private ILogger Logger;
 
         public MockClient()
         {
-
+            Logger = Services.GetService<ILogger>();
         }
 
-        public void MockTest1()
+        public void MockTest()
         {
-            Console.WriteLine("Running test1");
-            var target = new IPEndPoint(IPAddress.Parse("127.0.0.1"), Configurations.Config.MainPort);
+            Logger.Log("Running tests",1);
+            var target = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3232);
             var socket = new UdpClient();
 
             for (int num = 1; num <= 3; num++)

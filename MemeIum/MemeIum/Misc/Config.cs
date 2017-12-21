@@ -7,6 +7,8 @@ namespace MemeIum.Misc
     class Config
     {
         public int MainPort { get; set; }
+        public int MinLogLevelToSave { get; set; }
+        public int MinLogLevelToDisplay { get; set; }
 
     }
 }

@@ -1,4 +1,5 @@
 ﻿{
-  "MainPort": 31484
-
+  "MainPort": 31484,
+  "MinLogLevelToSave": 0,
+  "MinLogLevelToDisplay": 0 
 }
