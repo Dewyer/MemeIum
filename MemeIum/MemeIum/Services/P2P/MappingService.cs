@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -10,7 +11,12 @@ namespace MemeIum.Services
 {
     class MappingService : IMappingService
     {
+        private readonly IP2PServer _server;
+        private readonly ILogger Logger;
+    
         public List<Peer> Peers;
+        public List<RequestForPeers> ActiveRequestForPeers;
+
         public Peer ThisPeer;
 
         public MappingService()
@@ -18,51 +24,81 @@ namespace MemeIum.Services
             string externalip = new WebClient().DownloadString("http://icanhazip.com");
 
             Peers = new List<Peer>();
-            ThisPeer = new Peer(){Address = externalip};
+            ThisPeer = new Peer(){Address = externalip,Port=Configurations.Config.MainPort};
+            ActiveRequestForPeers = new List<RequestForPeers>();
+
+            _server = Services.GetService<IP2PServer>();
+            Logger = Services.GetService<ILogger>();
+
         }
 
-        public void InitiateSweap(List<string> originPeers)
+        public void InitiateSweap(List<Peer> originPeers)
         {
-            
-        }
+            var request = new GetAddressesRequest();
+            request.MaxPeers = Configurations.Config.MaxPeersGiven;
 
-        public void ParsePeerRequest(MappingRequest request,IPEndPoint source)
-        {
-            Console.WriteLine("Parsin: {0}",source.Address);
-
-            if (request.Ask)
+            foreach (var originPeer in originPeers)
             {
+                _server.SendResponse(request,originPeer);
 
+                ActiveRequestForPeers.Add(new RequestForPeers(){From=originPeer,ElapseTime = DateTime.Now.AddSeconds(Configurations.Config.SecondsToWaitForAddresses)});
             }
-            else
+        }
+
+        public void AddPeerToMe(Peer toadd)
+        {
+            if (Peers.FindAll(rr => rr.Equals(toadd)).Count == 0 && !ThisPeer.Equals(toadd))
             {
-                RegisterPeers(request);
+                Peers.Add(toadd);
+                Logger.Log($"New peer: {toadd.ToString()}");
             }
         }
 
-        public void AnswerToAsk(MappingRequest request,IPEndPoint source)
+        public bool WantedAdresses(AddressesRequest req, Peer source)
         {
-            var socket = new UdpClient();
-            var peersToSend = new List<string>();
-            
-            foreach (var peer in Peers)
+            var newActive = ActiveRequestForPeers.FindAll(r =>
+                r.ElapseTime >= DateTime.Now);
+            ActiveRequestForPeers = newActive.ToList();
+
+            bool wanted = (ActiveRequestForPeers.FindAll(r =>
+                               r.From.Equals(source)).Count > 0);
+            if (!wanted)
             {
-                if (request.Peers.FindAll(r => r == peer.ToString()).Count == 0)
+                Logger.Log($"Rejected Addresses From: {source.ToString()} | Many: {req.Peers.Count} | all: {ActiveRequestForPeers.Count}");
+            }
+            return wanted;
+        }
+
+        public void ParseAddressesRequest(AddressesRequest request,Peer source)
+        {
+            AddPeerToMe(source);
+            if (WantedAdresses(request,source))
+            {
+                foreach (var peer in request.Peers)
                 {
-                    peersToSend.Add(peer.ToString());
+                    AddPeerToMe(peer);
                 }
             }
         }
 
-        public void RegisterPeers(MappingRequest request)
+        public void ParseGetAddressesRequest(GetAddressesRequest request, Peer source)
         {
-            foreach (var requestPeer in request.Peers)
-            {
-                if (Peers.FindAll(r => r.ToString() == requestPeer).Count == 0)
-                {
-                    Peers.Add(Peer.FromString(requestPeer));
-                }
-            }
+            //Answer with max n peers
+            var peersRandom = new List<Peer>();
+            peersRandom.AddRange(Peers);
+            peersRandom.Shuffle();
+            int numberOfPeersToRespond = (peersRandom.Count >= request.MaxPeers) ? request.MaxPeers : peersRandom.Count;
+            var responsePeers = peersRandom.Take(numberOfPeersToRespond).ToList();
+            var response = new AddressesRequest(){Peers = responsePeers };
+
+            AddPeerToMe(source);
+            _server.SendResponse(response,source);
         }
+
+        public void BroadCast()
+        {
+
+        }
+
     }
 }

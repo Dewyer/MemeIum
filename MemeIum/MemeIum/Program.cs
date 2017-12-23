@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
 using MemeIum.Services;
 
 namespace MemeIum
@@ -44,10 +46,9 @@ namespace MemeIum
             
             LoadCommandLineArgs(args);
 
-            Services.Services.RegisterSingeleton(typeof(IMappingService),new MappingService());
-
             Server = new P2PServer();
             Services.Services.RegisterSingeleton(typeof(IP2PServer), Server);
+            Services.Services.RegisterSingeleton(typeof(IMappingService), new MappingService());
             Server.Start();
             Logger.Log("Starting up node...");
 

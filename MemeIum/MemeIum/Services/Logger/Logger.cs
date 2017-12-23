@@ -17,18 +17,18 @@ namespace MemeIum.Services
 
         public Logger()
         {
-            if (!Directory.Exists("./Logs"))
+            if (!Directory.Exists(Configurations.CurrentPath+"\\Logs"))
             {
-                Directory.CreateDirectory("./Logs");
+                Directory.CreateDirectory(Configurations.CurrentPath+"\\Logs");
             }
             var date = DateTime.Now.ToString("mm HH dd MM yyyy");
             var revision = 0;
-            LogPath = $"./Logs/log-{date}-{revision}.log";
+            LogPath = $"{Configurations.CurrentPath}\\Logs\\log-{date}-{revision}.log";
 
             while (File.Exists(LogPath))
             {
                 revision++;
-                LogPath = $"./Logs/log-{date}-{revision}.log";
+                LogPath = $"{Configurations.CurrentPath}\\Logs\\log-{date}-{revision}.log";
             }
 
             File.AppendAllText(LogPath,$"Created : {DateTime.Now.ToString("F")}\n");

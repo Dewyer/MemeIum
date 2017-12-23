@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using MemeIum.Misc;
 using MemeIum.Requests;
 using Newtonsoft.Json;
 
@@ -20,15 +21,18 @@ namespace MemeIum.Services
         public void MockTest()
         {
             Logger.Log("Running tests",1);
-            var target = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3232);
-            var socket = new UdpClient();
+            var loch = "127.0.0.1";
+            var mapper = Services.GetService<IMappingService>();
 
-            for (int num = 1; num <= 3; num++)
+            var origins = new List<Peer> {new Peer() {Address = loch, Port = 3232}, new Peer() { Address = loch, Port = 3233 } };
+            var second = new List<Peer> {new Peer() {Address = loch, Port = 4242}};
+            if (Configurations.Config.MainPort == 4242)
             {
-                var msg = JsonConvert.SerializeObject(new MappingRequest() {Version = "0.1", Type = 0,Ask=true});
-
-                byte[] message = Encoding.UTF8.GetBytes(msg);
-                socket.Send(message, message.Length, target);
+                mapper.InitiateSweap(origins);
+            }
+            else
+            {
+                mapper.InitiateSweap(second);
             }
         }
     }

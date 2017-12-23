@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 
 namespace MemeIum.Misc
@@ -14,6 +15,11 @@ namespace MemeIum.Misc
             return Address+":"+Port;
         }
 
+        public bool Equals(Peer to)
+        {
+            return to.Address == Address && to.Port == Port;
+        }
+
         public static Peer FromString(string source)
         {
             try
@@ -26,6 +32,16 @@ namespace MemeIum.Misc
             {
                 return null;
             }
+        }
+
+        public static Peer FromIPEndPoint(IPEndPoint endp)
+        {
+            return new Peer(){Address = endp.Address.ToString(),Port = endp.Port};
+        }
+
+        public IPEndPoint ToEndPoint()
+        {
+            return new IPEndPoint(IPAddress.Parse(this.Address),Port );
         }
     }
 }
