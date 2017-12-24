@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using MemeIum.Misc;
 using MemeIum.Requests;
+using MemeIum.Services.Wallet;
 using Newtonsoft.Json;
 
 namespace MemeIum.Services
@@ -18,7 +19,7 @@ namespace MemeIum.Services
             Logger = Services.GetService<ILogger>();
         }
 
-        public void MockTest()
+        public void MockTestMapp()
         {
             Logger.Log("Running tests",1);
             var loch = "127.0.0.1";
@@ -34,6 +35,24 @@ namespace MemeIum.Services
             {
                 mapper.InitiateSweap(second);
             }
+        }
+
+        public void MockTest()
+        {
+            Logger.Log("Running tests", 1);
+            var wallet = Services.GetService<IWalletService>();
+            var body = new TransactionBody()
+            {
+                FromAddress = wallet.Address,
+                VInput = 1,
+                VOuts = new List<TransactionVOut>() { new TransactionVOut(){ToAddress = "asd",VOut = 1}}
+            };
+            TransactionBody.SetUniqueIdForBody(body);
+            
+            var trs = wallet.MakeTransaction(body);
+
+            Logger.Log(JsonConvert.SerializeObject(trs));
+            //Logger.Log(trs.Signature);
         }
     }
 }

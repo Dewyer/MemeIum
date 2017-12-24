@@ -95,7 +95,7 @@ namespace MemeIum.Services
             _server.SendResponse(response,source);
         }
 
-        public void BroadCast()
+        public void Broadcast()
         {
 
         }

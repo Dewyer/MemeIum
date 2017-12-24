@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using MemeIum.Services;
+using MemeIum.Services.Wallet;
 
 namespace MemeIum
 {
@@ -46,13 +47,15 @@ namespace MemeIum
             
             LoadCommandLineArgs(args);
 
+            Services.Services.RegisterSingeleton(typeof(IWalletService), new WalletService());
+
             Server = new P2PServer();
             Services.Services.RegisterSingeleton(typeof(IP2PServer), Server);
             Services.Services.RegisterSingeleton(typeof(IMappingService), new MappingService());
             Server.Start();
             Logger.Log("Starting up node...");
 
-            if (RunTests)
+            if (true)
             {
                 var mck = new MockClient();
                 mck.MockTest();
