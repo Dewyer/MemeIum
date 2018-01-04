@@ -9,6 +9,7 @@ namespace MemeIum.Services.Wallet
     interface IWalletService
     {
         string Address { get;}
+        string PubKey { get; }
         TransactionRequest MakeTransaction(TransactionBody body);
     }
 }

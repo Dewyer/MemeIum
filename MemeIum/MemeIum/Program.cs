@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using MemeIum.Services;
+using MemeIum.Services.Blockchain;
 using MemeIum.Services.Eventmanagger;
 using MemeIum.Services.EventManager;
 using MemeIum.Services.Wallet;
@@ -50,6 +51,7 @@ namespace MemeIum
             LoadCommandLineArgs(args);
 
             Services.Services.RegisterSingeleton(typeof(IWalletService), new WalletService());
+            Services.Services.RegisterSingeleton(typeof(IBlockChainService),new BlockChainService());
 
             Server = new P2PServer();
             Services.Services.RegisterSingeleton(typeof(IP2PServer), Server);
