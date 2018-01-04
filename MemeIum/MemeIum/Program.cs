@@ -2,6 +2,8 @@
 using System.IO;
 using System.Reflection;
 using MemeIum.Services;
+using MemeIum.Services.Eventmanagger;
+using MemeIum.Services.EventManager;
 using MemeIum.Services.Wallet;
 
 namespace MemeIum
@@ -44,7 +46,7 @@ namespace MemeIum
                 MinLogLevelToSave = Configurations.Config.MinLogLevelToSave
             };
             Services.Services.RegisterSingeleton(typeof(ILogger),Logger);
-            
+            Services.Services.RegisterSingeleton(typeof(IEventManager),new EventManager());
             LoadCommandLineArgs(args);
 
             Services.Services.RegisterSingeleton(typeof(IWalletService), new WalletService());

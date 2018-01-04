@@ -10,7 +10,9 @@ namespace MemeIum.Misc
     {
         public string TransactionId { get; set; }
         public string FromAddress { get; set; }
-        public float VInput { get; set; }
+        public string PubKey { get; set; }
+        public string Message { get; set; }
+        public List<TransactionVIn> VInputs { get; set; }
 
         public List<TransactionVOut> VOuts { get; set; }
 

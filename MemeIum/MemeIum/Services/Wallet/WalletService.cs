@@ -17,7 +17,7 @@ namespace MemeIum.Services.Wallet
         public string PrivKeysPath;
 
         private readonly RSACryptoServiceProvider _provider;
-        public string Address {
+        public string PubKey {
             get
             {
                 var pub = _provider.ExportParameters(false);
@@ -25,6 +25,16 @@ namespace MemeIum.Services.Wallet
                 var mod = Convert.ToBase64String(pub.Modulus);
                 return exp+" "+mod;
             }
+        }
+
+        public string Address
+        {
+            get
+            {
+                var hash = SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(PubKey));
+                return Convert.ToBase64String(hash);
+            }
+
         }
 
         public WalletService()

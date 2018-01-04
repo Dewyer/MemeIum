@@ -44,7 +44,7 @@ namespace MemeIum.Services
             var body = new TransactionBody()
             {
                 FromAddress = wallet.Address,
-                VInput = 1,
+                VInputs = null,
                 VOuts = new List<TransactionVOut>() { new TransactionVOut(){ToAddress = "asd",VOut = 1}}
             };
             TransactionBody.SetUniqueIdForBody(body);
