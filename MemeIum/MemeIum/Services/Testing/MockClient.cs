@@ -66,8 +66,8 @@ namespace MemeIum.Services
                 VInputs = null,
                 VOuts = new List<TransactionVOut>()
                 {
-                    new TransactionVOut(){ToAddress = "mXTDa61AImRC8wrs1HrKItGakDAoRLVXuVhqkXoMZK8",VOut = 100},
-                    new TransactionVOut(){ToAddress = "iFFN2KYcKWGcquJHFZHlkiJySiuli+Lhc5K7+mePyeA=",VOut = 100},
+                    //new TransactionVOut(){ToAddress = "mXTDa61AImRC8wrs1HrKItGakDAoRLVXuVhqkXoMZK8",VOut = 100},
+                    //new TransactionVOut(){ToAddress = "iFFN2KYcKWGcquJHFZHlkiJySiuli+Lhc5K7+mePyeA=",VOut = 100},
 
                 }
             };

@@ -5,6 +5,8 @@ using System.Text;
 using MemeIum.Requests;
 using MemeIum.Misc;
 using Newtonsoft.Json;
+using System.Data;
+using System.Data.SQLite;
 
 namespace MemeIum.Services.Blockchain
 {
@@ -24,10 +26,10 @@ namespace MemeIum.Services.Blockchain
 
             _logger = Services.GetService<ILogger>();
 
-            LoadSavedInfo();
+            TryLoadSavedInfo();
         }
 
-        public void LoadSavedInfo()
+        public void TryLoadSavedInfo()
         {
             var infoPath = $"{_blockChainPath}\\Data\\info.json";
             Info = null;
@@ -155,6 +157,7 @@ namespace MemeIum.Services.Blockchain
 
         public void ParseInvitationRequest(InvitationRequest request)
         {
+
         }
     }
 }

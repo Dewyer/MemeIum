@@ -12,7 +12,7 @@ namespace MemeIum.Misc
         public string FromAddress { get; set; }
         public string PubKey { get; set; }
         public string Message { get; set; }
-        public List<TransactionVIn> VInputs { get; set; }
+        public List<TransactionVOut> VInputs { get; set; }
 
         public List<TransactionVOut> VOuts { get; set; }
 

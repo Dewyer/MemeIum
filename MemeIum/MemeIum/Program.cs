@@ -5,6 +5,7 @@ using MemeIum.Services;
 using MemeIum.Services.Blockchain;
 using MemeIum.Services.Eventmanagger;
 using MemeIum.Services.EventManager;
+using MemeIum.Services.Other;
 using MemeIum.Services.Wallet;
 
 namespace MemeIum
@@ -50,8 +51,10 @@ namespace MemeIum
             Services.Services.RegisterSingeleton(typeof(IEventManager),new EventManager());
             LoadCommandLineArgs(args);
 
+            Services.Services.RegisterSingeleton(typeof(ITransactionVerifier),new TransactionVerifier());
             Services.Services.RegisterSingeleton(typeof(IWalletService), new WalletService());
             Services.Services.RegisterSingeleton(typeof(IBlockChainService),new BlockChainService());
+            
 
             Server = new P2PServer();
             Services.Services.RegisterSingeleton(typeof(IP2PServer), Server);
