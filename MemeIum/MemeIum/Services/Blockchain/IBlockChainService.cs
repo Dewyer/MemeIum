@@ -11,5 +11,7 @@ namespace MemeIum.Services.Blockchain
         void ParseInvitationRequest(InvitationRequest request);
         void SaveBlock(Block block);
         Block LookUpBlock(string Id);
+
+        bool IsBlockInLongestChain(string blockid);
     }
 }

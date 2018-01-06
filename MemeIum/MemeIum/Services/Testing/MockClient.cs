@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Reflection.Metadata;
 using System.Text;
 using MemeIum.Misc;
+using MemeIum.Misc.Transaction;
 using MemeIum.Requests;
 using MemeIum.Services.Blockchain;
 using MemeIum.Services.Wallet;
@@ -51,14 +52,13 @@ namespace MemeIum.Services
             var ww = Services.GetService<IWalletService>();
 
             var genesis = new Block();
-            genesis.TimeOfCreation = DateTime.Now;
+            genesis.TimeOfCreation = DateTime.UtcNow;
             genesis.Body = new BlockBody();
             genesis.Body.Height = 0;
             genesis.Body.LastBlockId = "0";
-            genesis.Body.MinedByAddress = ww.Address;
             genesis.Body.Target = 0;
             genesis.Body.Nounce = "42";
-            genesis.Body.Tx = new List<TransactionRequest>();
+            genesis.Body.Tx = new List<Transaction>();
             Block.SetUniqueBlockId(genesis);
             var bb1 = new TransactionBody(){FromAddress = "+Je/HCsw1/oOmTUP+OqzQSrgC/mJc+Pe1UyYLKvE4wU=",
                 Message = "Initial coin offer.",

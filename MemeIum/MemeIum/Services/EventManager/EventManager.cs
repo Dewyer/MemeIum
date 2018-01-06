@@ -13,8 +13,10 @@ namespace MemeIum.Services.EventManager
         public EventManager()
         {
             _handlers = new Dictionary<EventTypes.EventType, List<Action<object>>>();
-            _handlers.Add(EventTypes.EventType.NewBlock,new List<Action<object>>());
-            _handlers.Add(EventTypes.EventType.NewTransaction,new List<Action<object>>());
+            foreach (EventTypes.EventType val in Enum.GetValues(typeof(EventTypes.EventType)))
+            {
+                _handlers.Add(val, new List<Action<object>>());
+            }
         }
 
         public void RegisterEventListener(Action<object> action, EventTypes.EventType type)

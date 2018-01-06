@@ -12,7 +12,7 @@ namespace MemeIum.Misc
         public string FromAddress { get; set; }
         public string PubKey { get; set; }
         public string Message { get; set; }
-        public List<TransactionVOut> VInputs { get; set; }
+        public List<TransactionVIn> VInputs { get; set; }
 
         public List<TransactionVOut> VOuts { get; set; }
 
@@ -20,7 +20,7 @@ namespace MemeIum.Misc
         {
             body.TransactionId = "42";
             var json = JsonConvert.SerializeObject(body);
-            json += DateTime.Now.Ticks.ToString();
+            json += DateTime.UtcNow.Ticks.ToString();
             var hash = SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(json));
 
             body.TransactionId = Convert.ToBase64String(hash);

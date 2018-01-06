@@ -13,7 +13,7 @@ namespace MemeIum.Requests
             Type = RequestHeader.RequestIndexes[typeof(InvitationRequest)];
         }
 
-        public int DataType { get; set; }
+        public bool IsBlock { get; set; }
         public string DataId { get; set; }
     }
 }

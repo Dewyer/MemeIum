@@ -12,6 +12,7 @@ namespace MemeIum.Services.Eventmanagger
         public enum EventType
         {
             NewBlock,
+            NewVerifiedBlock,
             NewTransaction
         }
     }

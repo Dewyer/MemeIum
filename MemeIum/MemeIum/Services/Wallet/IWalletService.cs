@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using MemeIum.Misc;
+using MemeIum.Misc.Transaction;
 using MemeIum.Requests;
 
 namespace MemeIum.Services.Wallet
@@ -10,6 +11,6 @@ namespace MemeIum.Services.Wallet
     {
         string Address { get;}
         string PubKey { get; }
-        TransactionRequest MakeTransaction(TransactionBody body);
+        Transaction MakeTransaction(TransactionBody body);
     }
 }

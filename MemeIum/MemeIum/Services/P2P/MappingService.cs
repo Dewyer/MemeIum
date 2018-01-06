@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using MemeIum.Misc;
+using MemeIum.Misc.Transaction;
 using MemeIum.Requests;
 
 namespace MemeIum.Services
@@ -95,9 +96,26 @@ namespace MemeIum.Services
             _server.SendResponse(response,source);
         }
 
-        public void Broadcast()
+        public void Broadcast(object data)
         {
+            var invit = new InvitationRequest();
+            if (data.GetType() == typeof(Transaction))
+            {
+                invit.IsBlock = false;
+            }
+            else if (data.GetType() == typeof(Block))
+            {
+                invit.IsBlock = true;
+            }
+            else
+            {
+                return;
+            }
 
+            foreach (var peer in Peers)
+            {
+                _server.SendResponse(invit,peer);
+            }
         }
 
     }

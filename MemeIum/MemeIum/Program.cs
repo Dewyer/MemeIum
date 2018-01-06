@@ -52,6 +52,7 @@ namespace MemeIum
             LoadCommandLineArgs(args);
 
             Services.Services.RegisterSingeleton(typeof(ITransactionVerifier),new TransactionVerifier());
+            Services.Services.RegisterSingeleton(typeof(IBlockVerifier),new BlockVerifier());
             Services.Services.RegisterSingeleton(typeof(IWalletService), new WalletService());
             Services.Services.RegisterSingeleton(typeof(IBlockChainService),new BlockChainService());
             

@@ -13,7 +13,10 @@ namespace MemeIum.Services
         public static Config Config { get; set; }
         public static string CurrentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 
-        public static int MAX_TRANSACTION_SIZE_BYTES = 3000;
+        public const int MAX_TRANSACTION_SIZE_BYTES = 3000;
+        public const int MAX_BLOCK_SIZE_BYTES = 12601200;
+
+        public const string GENESIS_BLOCK_ID = "AMeIyz3TYv5NoAxY4zRmaZ4eAbY+uKQvewFofZFOqfM=";
 
         static Configurations()
         {

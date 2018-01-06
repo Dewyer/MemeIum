@@ -11,11 +11,12 @@ namespace MemeIum.Misc
         public int Height { get; set; }
         public string LastBlockId { get; set; }
         public string Id { get; set; }
-        public string MinedByAddress { get; set; }
+        public TransactionVOut MinerVOut { get; set; }
+
         public float Target { get; set; }
         public string Nounce { get; set; }
 
-        public List<TransactionRequest> Tx { get; set; }
+        public List<Transaction.Transaction> Tx { get; set; }
 
     }
 }

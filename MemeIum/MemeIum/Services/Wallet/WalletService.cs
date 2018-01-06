@@ -4,6 +4,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using MemeIum.Misc;
+using MemeIum.Misc.Transaction;
 using MemeIum.Requests;
 using Newtonsoft.Json;
 
@@ -118,14 +119,14 @@ namespace MemeIum.Services.Wallet
             return false;
         }
 
-        public TransactionRequest MakeTransaction(TransactionBody body)
+        public Transaction MakeTransaction(TransactionBody body)
         {
             var bod = JsonConvert.SerializeObject(body);
             var bbytes = Encoding.UTF8.GetBytes(bod);
             var sign = _provider.SignData(bbytes, new SHA256CryptoServiceProvider());
             var signString = Convert.ToBase64String(sign);
             
-            var req = new TransactionRequest()
+            var req = new Transaction()
             {
                 Body = body,
                 Signature = signString

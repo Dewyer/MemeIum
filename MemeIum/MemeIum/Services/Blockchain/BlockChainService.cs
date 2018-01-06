@@ -7,12 +7,15 @@ using MemeIum.Misc;
 using Newtonsoft.Json;
 using System.Data;
 using System.Data.SQLite;
+using MemeIum.Services.Other;
 
 namespace MemeIum.Services.Blockchain
 {
     class BlockChainService : IBlockChainService
     {
         private readonly ILogger _logger;
+        private readonly ITransactionVerifier _transactionVerifier;
+        private readonly IBlockVerifier _blockVerifier;
 
         private string _blockChainPath;
         private string _blockChainFullPath;
@@ -25,6 +28,8 @@ namespace MemeIum.Services.Blockchain
             _blockChainFullPath = $"{_blockChainPath}\\Chain\\";
 
             _logger = Services.GetService<ILogger>();
+            _transactionVerifier = Services.GetService<ITransactionVerifier>();
+            _blockVerifier = Services.GetService<IBlockVerifier>();
 
             TryLoadSavedInfo();
         }
@@ -69,7 +74,7 @@ namespace MemeIum.Services.Blockchain
         {
             Info = new LocalChainInfo();
             CalculateLongestChain();
-            Info.EditTime = DateTime.Now;
+            Info.EditTime = DateTime.UtcNow;
             SaveLocalInfo();
         }
 
@@ -146,6 +151,22 @@ namespace MemeIum.Services.Blockchain
             return null;
         }
 
+        public bool IsBlockInLongestChain(string blockid)
+        {
+            var at = Info.EndOfLongestChain;
+
+            while (at != blockid)
+            {
+                at = LookUpBlock(at).Body.LastBlockId;
+
+                if (at == Configurations.GENESIS_BLOCK_ID)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         public void SaveBlock(Block block)
         {
             var fileName = $"{_blockChainFullPath}\\{block.Body.Id}.block";
@@ -157,7 +178,18 @@ namespace MemeIum.Services.Blockchain
 
         public void ParseInvitationRequest(InvitationRequest request)
         {
+            if (request.IsBlock)
+            {
+                var bb = LookUpBlock(request.DataId);
 
+                if (bb == null)
+                {
+
+                }
+            }
+            else
+            {
+            }
         }
     }
 }
