@@ -3,9 +3,12 @@ using System.IO;
 using System.Reflection;
 using MemeIum.Services;
 using MemeIum.Services.Blockchain;
+using MemeIum.Services.CatchUp;
 using MemeIum.Services.Eventmanagger;
 using MemeIum.Services.EventManager;
+using MemeIum.Services.Mineing;
 using MemeIum.Services.Other;
+using MemeIum.Services.UI;
 using MemeIum.Services.Wallet;
 
 namespace MemeIum
@@ -42,27 +45,27 @@ namespace MemeIum
 
         static void Main(string[] args)
         {
-            Logger = new Logger()
-            {
-                MinLogLevelToDisplay = Configurations.Config.MinLogLevelToDisplay,
-                MinLogLevelToSave = Configurations.Config.MinLogLevelToSave
-            };
-            Services.Services.RegisterSingeleton(typeof(ILogger),Logger);
-            Services.Services.RegisterSingeleton(typeof(IEventManager),new EventManager());
             LoadCommandLineArgs(args);
+            Services.Services.RegisterSingeleton<ILogger,Logger>();
+            Services.Services.RegisterSingeleton<IEventManager,EventManager>();
 
-            Services.Services.RegisterSingeleton(typeof(ITransactionVerifier),new TransactionVerifier());
-            Services.Services.RegisterSingeleton(typeof(IBlockVerifier),new BlockVerifier());
-            Services.Services.RegisterSingeleton(typeof(IWalletService), new WalletService());
-            Services.Services.RegisterSingeleton(typeof(IBlockChainService),new BlockChainService());
-            
+            Services.Services.RegisterSingeleton<ITransactionVerifier,TransactionVerifier>();
+            Services.Services.RegisterSingeleton<IBlockVerifier,BlockVerifier>();
+            Services.Services.RegisterSingeleton<IWalletService,WalletService>();
+            Services.Services.RegisterSingeleton<IBlockChainService,BlockChainService>();
+            Services.Services.RegisterSingeleton<IDifficultyService,DifficultyService>();
+            Services.Services.RegisterSingeleton<IMinerService,MinerService>();
 
-            Server = new P2PServer();
-            Services.Services.RegisterSingeleton(typeof(IP2PServer), Server);
-            Services.Services.RegisterSingeleton(typeof(IMappingService), new MappingService());
-            Server.Start();
+            Services.Services.RegisterSingeleton<IP2PServer,P2PServer>();
+            Services.Services.RegisterSingeleton<IMappingService,MappingService>();
+            Services.Services.RegisterSingeleton<ICatchUpService,CatchUpService>();
+            Services.Services.RegisterSingeleton<IUI,Ui>();
+            Services.Services.Initialize();
+
+            var Logger = Services.Services.GetService<ILogger>();
+            Logger.MinLogLevelToSave = Configurations.Config.MinLogLevelToSave;
+            Logger.MinLogLevelToDisplay = Configurations.Config.MinLogLevelToDisplay;
             Logger.Log("Starting up node...");
-
             if (true)
             {
                 var mck = new MockClient();

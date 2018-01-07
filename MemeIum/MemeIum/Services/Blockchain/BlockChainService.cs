@@ -7,25 +7,32 @@ using MemeIum.Misc;
 using Newtonsoft.Json;
 using System.Data;
 using System.Data.SQLite;
+using System.Linq;
+using MemeIum.Misc.Transaction;
+using MemeIum.Services.Eventmanagger;
+using MemeIum.Services.Mineing;
 using MemeIum.Services.Other;
 
 namespace MemeIum.Services.Blockchain
 {
-    class BlockChainService : IBlockChainService
+    class BlockChainService : IBlockChainService, IService
     {
-        private readonly ILogger _logger;
-        private readonly ITransactionVerifier _transactionVerifier;
-        private readonly IBlockVerifier _blockVerifier;
-        private readonly IP2PServer _server;
+        private ILogger _logger;
+        private ITransactionVerifier _transactionVerifier;
+        private IBlockVerifier _blockVerifier;
+        private IP2PServer _server;
+        private IEventManager _eventManager;
+        private IMappingService _mappingService;
+        private IMinerService _minerService;
 
         private string _blockChainPath;
         private string _blockChainFullPath;
 
         private List<InvitationRequest> _askedForRequests;
 
-        public LocalChainInfo Info;
+        public LocalChainInfo Info { get; set; }
 
-        public BlockChainService()
+        public void Init()
         {
             _blockChainPath = Configurations.CurrentPath + "\\BlockChain\\";
             _blockChainFullPath = $"{_blockChainPath}\\Chain\\";
@@ -34,10 +41,47 @@ namespace MemeIum.Services.Blockchain
             _transactionVerifier = Services.GetService<ITransactionVerifier>();
             _blockVerifier = Services.GetService<IBlockVerifier>();
             _server = Services.GetService<IP2PServer>();
+            _eventManager = Services.GetService<IEventManager>();
+            _eventManager.RegisterEventListener(OnNewBlock,EventTypes.EventType.NewBlock);
+            _mappingService = Services.GetService<IMappingService>();
+            _minerService = Services.GetService<IMinerService>();
 
             TryLoadSavedInfo();
             
             _askedForRequests = new List<InvitationRequest>();
+        }
+
+        private void OnNewBlock(object obj)
+        {
+            var block = (Block) obj;
+            if (_blockVerifier.Verify(block))
+            {
+                SaveBlock(block);
+
+                if (block.Body.LastBlockId == Info.EndOfLongestChain)
+                {
+                    Info.EndOfLongestChain = block.Body.Id;
+                    Info.Height++;
+                }
+                else
+                {
+                    CalculateLongestChain();
+                }
+                Info.EditTime = DateTime.UtcNow;
+                SaveLocalInfo();
+                _eventManager.PassNewTrigger(block,EventTypes.EventType.NewVerifiedBlock);
+                BroadCastVerifiedBlock(block);
+            }
+        }
+
+        private void BroadCastVerifiedBlock(Block block)
+        {
+            var req = new InvitationRequest()
+            {
+                DataId = block.Body.Id,
+                IsBlock = true
+            };
+            _mappingService.Broadcast(req);
         }
 
         public void TryLoadSavedInfo()
@@ -108,11 +152,11 @@ namespace MemeIum.Services.Blockchain
 
         public void CalculateLongestChain()
         {
-            _logger.Log("Calculateing new longest chain",1);
+            _logger.Log("Calculateing new longest chain", 1);
             var blockNames = Directory.GetFiles(_blockChainFullPath);
-            
+
             var forkFrom = new Dictionary<string, string>();
-            var forkLensFrom = new Dictionary<string,int>();
+            var forkLensFrom = new Dictionary<string, int>();
             foreach (var blockName in blockNames)
             {
                 var bPath = blockName.Split('\\');
@@ -128,7 +172,7 @@ namespace MemeIum.Services.Blockchain
             var maxAt = "0";
             foreach (var fork in forkFrom)
             {
-                var ll = getChainLen(forkFrom,forkLensFrom,fork.Key);
+                var ll = getChainLen(forkFrom, forkLensFrom, fork.Key);
                 if (maxChain < ll)
                 {
                     maxChain = ll;
@@ -137,6 +181,7 @@ namespace MemeIum.Services.Blockchain
             }
 
             Info.EndOfLongestChain = maxAt;
+            Info.Height = maxChain;
         }
 
         public Block LookUpBlock(string Id)
@@ -263,6 +308,16 @@ namespace MemeIum.Services.Blockchain
             }
         }
 
+        public Transaction TryGetTransaction(string id)
+        {
+            var txs = _minerService.MemPool.ToList().FindAll(r => r.Body.TransactionId == id);
+            if (txs.Count == 1)
+            {
+                return txs[0];
+            }
+            return null;
+        }
+
         public void ParseInvitationResponseRequest(InvitationResponseRequest request, Peer from)
         {
             if (request.IsBlock)
@@ -280,8 +335,38 @@ namespace MemeIum.Services.Blockchain
             }
             else
             {
-                //TODO: If it is in mineing pool then send it
+                var tt = TryGetTransaction(request.WantedDataId);
+                if (tt != null)
+                {
+                    var req = new TransactionRequest()
+                    {
+                        Transaction = tt
+                    };
+
+                    _server.SendResponse(req, from);
+                }
             }
         }
+
+        public void ParseDataRequest(object data)
+        {
+            if (data.GetType() == typeof(TransactionRequest))
+            {
+                var trans = (TransactionRequest) data;
+                if (TryGetTransaction(trans.Transaction.Body.TransactionId) == null)
+                {
+                    if (_transactionVerifier.Verify(trans.Transaction))
+                    {
+                        _eventManager.PassNewTrigger(trans.Transaction, EventTypes.EventType.NewTransaction);
+                    }
+                }
+            }
+            else if (data.GetType() == typeof(BlockRequest))
+            {
+                var block = (BlockRequest)data;
+                _eventManager.PassNewTrigger(block.Block,EventTypes.EventType.NewBlock);
+            }
+        }
+
     }
 }

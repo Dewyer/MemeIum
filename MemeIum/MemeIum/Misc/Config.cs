@@ -14,8 +14,12 @@ namespace MemeIum.Misc
         public int MaxPeersHave { get; set; }
         public int SecondsToWaitForAddresses { get; set; }
 
+        public bool ShouldMine { get; set; }
+        public int MaxThreadsToMineOn { get; set; }
+
         public int MinLogLevelToSave { get; set; }
         public int MinLogLevelToDisplay { get; set; }
+        public int SecondsToWaitBetweenCatchUpLoops { get; set; }
 
     }
 }

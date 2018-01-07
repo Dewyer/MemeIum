@@ -7,10 +7,27 @@ namespace MemeIum.Services
     public static class Services
     {
         private static Dictionary<Type,object> _services = new Dictionary<Type, object>();
+        private static List<Type> servicesTypes = new List<Type>();
+        private static List<Type> interFaceTypes = new List<Type>();
 
-        public static void RegisterSingeleton(Type type,object target)
+        public static void RegisterSingeleton<T,T2>()
         {
-            _services.Add(type,target);
+            interFaceTypes.Add(typeof(T));
+            servicesTypes.Add(typeof(T2));
+        }
+
+        public static void Initialize()
+        {
+            for (int ii = 0; ii < interFaceTypes.Count;ii++)
+            {
+                var obj = Activator.CreateInstance(servicesTypes[ii]);
+                _services.Add(interFaceTypes[ii],obj);
+            }
+
+            foreach (var service in _services)
+            {
+                ((IService)service.Value).Init();
+            }
         }
 
         public static T GetService<T>()
@@ -19,9 +36,10 @@ namespace MemeIum.Services
                 return (T)_services[typeof(T)];
             else
             {
-                return default(T);
+                throw new Exception("No service");
             }
         }
 
     }
 }
+

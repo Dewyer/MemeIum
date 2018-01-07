@@ -19,6 +19,8 @@ namespace MemeIum.Services
         public const int MAX_SECONDS_FOR_TARGET_AVERAGE = 60*30;
         public const int TARGET_SECONDS = 120;
         public const int TRANSACTION_WANT_LIMIT = 20;
+        public const int BLOCK_REWARD = 420000;
+        public const int CATCHUP_N = 5;
 
         public const string GENESIS_BLOCK_ID = "AMeIyz3TYv5NoAxY4zRmaZ4eAbY+uKQvewFofZFOqfM=";
 

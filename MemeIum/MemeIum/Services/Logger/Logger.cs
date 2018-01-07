@@ -5,7 +5,7 @@ using System.IO;
 
 namespace MemeIum.Services
 {
-    class Logger : ILogger
+    class Logger : ILogger, IService
     {
         
 
@@ -15,7 +15,7 @@ namespace MemeIum.Services
 
         private List<string> LevelPrefixes = new List<string>(){"Info","Warning","Error"};
 
-        public Logger()
+        public void Init()
         {
             if (!Directory.Exists(Configurations.CurrentPath+"\\Logs"))
             {

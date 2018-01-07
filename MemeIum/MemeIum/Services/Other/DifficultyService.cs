@@ -8,11 +8,11 @@ using MemeIum.Services.Eventmanagger;
 
 namespace MemeIum.Services.Other
 {
-    class DifficultyService : IDifficultyService
+    class DifficultyService : IDifficultyService,IService
     {
-        private readonly IBlockChainService _blockChainService;
+        private IBlockChainService _blockChainService;
 
-        public DifficultyService()
+        public void Init()
         {
             _blockChainService = Services.GetService<IBlockChainService>();
         }

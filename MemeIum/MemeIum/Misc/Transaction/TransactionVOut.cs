@@ -45,7 +45,7 @@ namespace MemeIum.Misc
         public SQLiteCommand CreateInsertCommand()
         {
             var cmd = new SQLiteCommand();
-            cmd.CommandText = "INSERT INTO unspent (id,fromaddr,toaddr,amount,inblock) VALUES ($id,$from,$to,$am,$block);";
+            cmd.CommandText = "INSERT INTO unspent (id,fromaddr,toaddr,amount,inblock,spent) VALUES ($id,$from,$to,$am,$block,'0');";
             cmd.Parameters.AddWithValue("id", this.Id);
             cmd.Parameters.AddWithValue("from",this.FromAddress);
             cmd.Parameters.AddWithValue("to", this.ToAddress);

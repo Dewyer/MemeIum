@@ -10,14 +10,14 @@ using Newtonsoft.Json;
 
 namespace MemeIum.Services.Wallet
 {
-    class WalletService : IWalletService
+    class WalletService : IWalletService, IService
     {
-        public readonly ILogger Logger;
+        public ILogger Logger;
         public string KeysFolderPath;
         public string PubKeysPath;
         public string PrivKeysPath;
 
-        private readonly RSACryptoServiceProvider _provider;
+        private RSACryptoServiceProvider _provider;
         public string PubKey {
             get
             {
@@ -38,10 +38,9 @@ namespace MemeIum.Services.Wallet
 
         }
 
-        public WalletService()
+        public void Init()
         {
             Logger = Services.GetService<ILogger>();
-            //lets take a new CSP with a new 2048 bit rsa key pair
             _provider = new RSACryptoServiceProvider(2048);
             KeysFolderPath = $"{Configurations.CurrentPath}\\Keys";
             PubKeysPath = $"{KeysFolderPath}\\pub.key";

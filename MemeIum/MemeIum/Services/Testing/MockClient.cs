@@ -56,7 +56,7 @@ namespace MemeIum.Services
             genesis.Body = new BlockBody();
             genesis.Body.Height = 0;
             genesis.Body.LastBlockId = "0";
-            genesis.Body.Target = 0;
+            genesis.Body.Target = "0";
             genesis.Body.Nounce = "42";
             genesis.Body.Tx = new List<Transaction>();
             Block.SetUniqueBlockId(genesis);

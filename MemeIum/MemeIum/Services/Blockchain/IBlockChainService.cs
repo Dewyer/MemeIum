@@ -8,6 +8,7 @@ namespace MemeIum.Services.Blockchain
 {
     interface IBlockChainService
     {
+        LocalChainInfo Info { get; set; }
         void ParseInvitationRequest(InvitationRequest request,Peer from);
         void ParseInvitationResponseRequest(InvitationResponseRequest request, Peer from);
         void SaveBlock(Block block);
@@ -15,5 +16,8 @@ namespace MemeIum.Services.Blockchain
         BlockInfo LookUpBlockInfo(string Id);
         BlockInfo LookUpBlockInfoByHeight(int height);
         bool IsBlockInLongestChain(string blockid);
+        void ParseDataRequest(object data);
+        void TryLoadSavedInfo();
+
     }
 }

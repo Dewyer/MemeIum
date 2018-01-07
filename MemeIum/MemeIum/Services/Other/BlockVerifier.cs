@@ -8,13 +8,13 @@ using Newtonsoft.Json;
 
 namespace MemeIum.Services.Other
 {
-    class BlockVerifier : IBlockVerifier
+    class BlockVerifier : IBlockVerifier,IService
     {
-        private readonly ITransactionVerifier _transactionVerifier;
-        private readonly IDifficultyService _difficultyService;
-        private readonly IBlockChainService _blockChainService;
+        private ITransactionVerifier _transactionVerifier;
+        private IDifficultyService _difficultyService;
+        private IBlockChainService _blockChainService;
 
-        public BlockVerifier()
+        public void Init()
         {
             _transactionVerifier = Services.GetService<ITransactionVerifier>();
             _difficultyService = Services.GetService<IDifficultyService>();

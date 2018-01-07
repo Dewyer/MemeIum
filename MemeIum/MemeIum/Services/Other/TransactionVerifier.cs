@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using MemeIum.Misc;
@@ -13,15 +14,15 @@ using Newtonsoft.Json;
 
 namespace MemeIum.Services.Other
 {
-    class TransactionVerifier : ITransactionVerifier
+    class TransactionVerifier : ITransactionVerifier,IService
     {
-        private readonly ILogger _logger;
+        private ILogger _logger;
 
         private string _unspentDbFullPath;
         private SQLiteConnection _unspentConnection;
-        private readonly IBlockChainService _blockChainService;
+        private IBlockChainService _blockChainService;
 
-        public TransactionVerifier()
+        public void Init()
         {
             _logger = Services.GetService<ILogger>();
             _unspentDbFullPath = $"{Configurations.CurrentPath}\\BlockChain\\Data\\Unspent.sqlite";
@@ -36,11 +37,35 @@ namespace MemeIum.Services.Other
 
         public void CreateBaseDb()
         {
-            string sql = @"CREATE TABLE unspent (id varchar(50) PRIMARY KEY,fromaddr varchar(50),toaddr varchar(50),amount varchar(70),inblock varchar(50));";
+            string sql = @"CREATE TABLE unspent (id varchar(50) PRIMARY KEY,fromaddr varchar(50),toaddr varchar(50),amount varchar(70),inblock varchar(50),spent varchar(1));";
             var cmd = _unspentConnection.CreateCommand();
             cmd.CommandText = sql;
 
             cmd.ExecuteNonQuery();
+        }
+
+        public List<TransactionVOut> GetAllTransactionVOutsForAddress(string addr)
+        {
+            var cmd = _unspentConnection.CreateCommand();
+            cmd.CommandText = "SELECT * FROM unspent WHERE toaddr=$to";
+            cmd.Parameters.AddWithValue("to", addr);
+            var reader = cmd.ExecuteReader();
+            var ts = new List<TransactionVOut>();
+            while (reader.Read())
+            {
+                ts.Add(TransactionVOut.GetVoutFromSqlReader(reader));
+            }
+
+            return ts;
+        }
+
+        public void SpendInput(string id)
+        {
+            var cmd = _unspentConnection.CreateCommand();
+            cmd.CommandText = "UPDATE unspent SET spent='1' WHERE id=$id";
+            cmd.Parameters.AddWithValue("id", id);
+            cmd.ExecuteNonQuery();
+
         }
 
         public void OnNewBlock(object obj)
@@ -51,6 +76,10 @@ namespace MemeIum.Services.Other
                 foreach (var vout in transaction.Body.VOuts)
                 {
                     RegisterVout(vout);
+                }
+                foreach (var input in transaction.Body.VInputs)
+                {
+                    SpendInput(input.OutputId);
                 }
             }
 
@@ -86,7 +115,7 @@ namespace MemeIum.Services.Other
             }
         }
 
-        public TransactionVOut GetUnspeTransactionVOut(string id)
+        public TransactionVOut GetUnspeTransactionVOut(string id,out bool spent)
         {
             var sql = "SELECT * FROM unspent WHERE id=$id";
             var cmd = _unspentConnection.CreateCommand();
@@ -95,10 +124,12 @@ namespace MemeIum.Services.Other
             var reader = cmd.ExecuteReader();
             if (reader.FieldCount != 1)
             {
+                spent = true;
                 return null;
             }
 
             reader.Read();
+            spent = reader["spent"].ToString().Equals("1");
             return TransactionVOut.GetVoutFromSqlReader(reader);
         }
 
@@ -135,7 +166,21 @@ namespace MemeIum.Services.Other
                 }
             }
 
+            if (!VerifySum(transaction))
+            {
+                return false;
+            }
+
+
             return true;
+        }
+
+        public bool VerifySum(Transaction transaction)
+        {
+            var inp = transaction.Body.VInputs.Sum(r => GetUnspeTransactionVOut(r.OutputId,out bool spent).Amount);
+            var outp = transaction.Body.VOuts.Sum(r => r.Amount);
+            return inp>=outp;
+
         }
 
         public bool VerifyAddress(Transaction transaction)
@@ -148,8 +193,13 @@ namespace MemeIum.Services.Other
         public bool VerifyVInAsUnspent(TransactionVIn vin, Transaction transaction,out TransactionVOut vout)
         {
 
-            vout = GetUnspeTransactionVOut(vin.OutputId);
+            bool spent;
+            vout = GetUnspeTransactionVOut(vin.OutputId,out spent);
             if (vout == null)
+            {
+                return false;
+            }
+            else if (spent)
             {
                 return false;
             }

@@ -6,11 +6,11 @@ using MemeIum.Services.Eventmanagger;
 
 namespace MemeIum.Services.EventManager
 {
-    class EventManager : IEventManager
+    class EventManager : IEventManager, IService
     {
         private Dictionary<EventTypes.EventType, List<Action<object>>> _handlers;
 
-        public EventManager()
+        public void Init()
         {
             _handlers = new Dictionary<EventTypes.EventType, List<Action<object>>>();
             foreach (EventTypes.EventType val in Enum.GetValues(typeof(EventTypes.EventType)))

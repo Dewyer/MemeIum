@@ -19,7 +19,8 @@ namespace MemeIum.Requests
             RequestIndexes.Add(typeof(InvitationResponseRequest),3);
             RequestIndexes.Add(typeof(TransactionRequest), 4);
             RequestIndexes.Add(typeof(BlockRequest), 5);
-
+            RequestIndexes.Add(typeof(DidICatchUpRequest), 6);
+            RequestIndexes.Add(typeof(CatcherUpRequest), 7);
 
         }
 

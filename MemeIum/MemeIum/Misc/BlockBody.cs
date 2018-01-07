@@ -13,7 +13,7 @@ namespace MemeIum.Misc
         public string Id { get; set; }
         public TransactionVOut MinerVOut { get; set; }
 
-        public float Target { get; set; }
+        public string Target { get; set; }
         public string Nounce { get; set; }
 
         public List<Transaction.Transaction> Tx { get; set; }

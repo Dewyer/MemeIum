@@ -10,17 +10,17 @@ using MemeIum.Requests;
 
 namespace MemeIum.Services
 {
-    class MappingService : IMappingService
+    class MappingService : IMappingService, IService
     {
-        private readonly IP2PServer _server;
-        private readonly ILogger Logger;
+        private IP2PServer _server;
+        private ILogger Logger;
     
-        public List<Peer> Peers;
+        public List<Peer> Peers { get; set; }
         public List<RequestForPeers> ActiveRequestForPeers;
 
         public Peer ThisPeer;
 
-        public MappingService()
+        public void Init()
         {
             string externalip = new WebClient().DownloadString("http://icanhazip.com");
 

@@ -7,21 +7,25 @@ using System.Threading;
 using MemeIum.Misc;
 using MemeIum.Requests;
 using MemeIum.Services.Blockchain;
+using MemeIum.Services.CatchUp;
 using Newtonsoft.Json;
 
 namespace MemeIum.Services
 {
-    class P2PServer : IP2PServer
+    class P2PServer : IP2PServer,IService
     {
-        public readonly ILogger Logger;
-        private readonly IBlockChainService _blockChainService;
+        public ILogger Logger;
+        private IBlockChainService _blockChainService;
+        private ICatchUpService _catchUpService;
 
         private UdpClient socket;
 
-        public P2PServer()
+        public void Init()
         {
             Logger = Services.GetService<ILogger>();
             _blockChainService = Services.GetService<IBlockChainService>();
+            _catchUpService = Services.GetService<ICatchUpService>();
+            Start();
         }
 
         public void Start()
@@ -74,13 +78,59 @@ namespace MemeIum.Services
             else if (header.Type == 2)
             {
                 var req = JsonConvert.DeserializeObject<InvitationRequest>(request);
-                _blockChainService.ParseInvitationRequest(req,source);
+                if (_catchUpService.CaughtUp)
+                {
+                    _blockChainService.ParseInvitationRequest(req, source);
+                }
             }
             else if (header.Type == 3)
             {
                 var req = JsonConvert.DeserializeObject<InvitationResponseRequest>(request);
-                _blockChainService.ParseInvitationResponseRequest(req,source);
+                if (_catchUpService.CaughtUp)
+                {
+                    _blockChainService.ParseInvitationResponseRequest(req, source);
+                }
             }
+            else if (header.Type == 4)
+            {
+                var req = JsonConvert.DeserializeObject<TransactionRequest>(request);
+                if (_catchUpService.CaughtUp)
+                {
+                    _blockChainService.ParseDataRequest(req);
+                }
+                else
+                {
+                    _catchUpService.ParseCatchUpData(req);
+                }
+            }
+            else if (header.Type == 5)
+            {
+                var req = JsonConvert.DeserializeObject<BlockRequest>(request);
+                if (_catchUpService.CaughtUp)
+                {
+                    _blockChainService.ParseDataRequest(req);
+                }
+                else
+                {
+                    _catchUpService.ParseCatchUpData(req);
+                }
+            }
+            else if (header.Type == 6)
+            {
+                if (_catchUpService.CaughtUp)
+                {
+
+                }
+            }
+            else if (header.Type == 7)
+            {
+                if (!_catchUpService.CaughtUp)
+                {
+                    var req = JsonConvert.DeserializeObject<CatcherUpRequest>(request);
+                    _catchUpService.ParseCatcherUpRequest(req,source);
+                }
+            }
+
         }
 
         public void SendResponse<T>(T response,Peer peer)
