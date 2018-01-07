@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using MemeIum.Misc;
 using MemeIum.Requests;
+using MemeIum.Services.Blockchain;
 using Newtonsoft.Json;
 
 namespace MemeIum.Services
@@ -13,11 +14,14 @@ namespace MemeIum.Services
     class P2PServer : IP2PServer
     {
         public readonly ILogger Logger;
+        private readonly IBlockChainService _blockChainService;
+
         private UdpClient socket;
 
         public P2PServer()
         {
             Logger = Services.GetService<ILogger>();
+            _blockChainService = Services.GetService<IBlockChainService>();
         }
 
         public void Start()
@@ -66,6 +70,16 @@ namespace MemeIum.Services
             {
                 var req = JsonConvert.DeserializeObject<AddressesRequest>(request);
                 mapper.ParseAddressesRequest(req,source);
+            }
+            else if (header.Type == 2)
+            {
+                var req = JsonConvert.DeserializeObject<InvitationRequest>(request);
+                _blockChainService.ParseInvitationRequest(req,source);
+            }
+            else if (header.Type == 3)
+            {
+                var req = JsonConvert.DeserializeObject<InvitationResponseRequest>(request);
+                _blockChainService.ParseInvitationResponseRequest(req,source);
             }
         }
 

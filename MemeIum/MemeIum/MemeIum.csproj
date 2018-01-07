@@ -16,4 +16,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\Mineing\" />
+  </ItemGroup>
+
 </Project>

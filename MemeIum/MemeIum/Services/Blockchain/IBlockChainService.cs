@@ -8,10 +8,12 @@ namespace MemeIum.Services.Blockchain
 {
     interface IBlockChainService
     {
-        void ParseInvitationRequest(InvitationRequest request);
+        void ParseInvitationRequest(InvitationRequest request,Peer from);
+        void ParseInvitationResponseRequest(InvitationResponseRequest request, Peer from);
         void SaveBlock(Block block);
         Block LookUpBlock(string Id);
-
+        BlockInfo LookUpBlockInfo(string Id);
+        BlockInfo LookUpBlockInfoByHeight(int height);
         bool IsBlockInLongestChain(string blockid);
     }
 }

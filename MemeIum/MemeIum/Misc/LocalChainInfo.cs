@@ -7,6 +7,7 @@ namespace MemeIum.Misc
     class LocalChainInfo
     {
         public string EndOfLongestChain { get; set; }
+        public int Height { get; set; }
         public DateTime EditTime { get; set; }
     }
 }

@@ -16,9 +16,12 @@ namespace MemeIum.Services.Blockchain
         private readonly ILogger _logger;
         private readonly ITransactionVerifier _transactionVerifier;
         private readonly IBlockVerifier _blockVerifier;
+        private readonly IP2PServer _server;
 
         private string _blockChainPath;
         private string _blockChainFullPath;
+
+        private List<InvitationRequest> _askedForRequests;
 
         public LocalChainInfo Info;
 
@@ -30,8 +33,11 @@ namespace MemeIum.Services.Blockchain
             _logger = Services.GetService<ILogger>();
             _transactionVerifier = Services.GetService<ITransactionVerifier>();
             _blockVerifier = Services.GetService<IBlockVerifier>();
+            _server = Services.GetService<IP2PServer>();
 
             TryLoadSavedInfo();
+            
+            _askedForRequests = new List<InvitationRequest>();
         }
 
         public void TryLoadSavedInfo()
@@ -111,10 +117,10 @@ namespace MemeIum.Services.Blockchain
             {
                 var bPath = blockName.Split('\\');
                 var bId = bPath[bPath.Length - 1].Split('.')[0];
-                var block = LookUpBlock(bId);
+                var block = LookUpBlockInfo(bId);
                 if (block != null)
                 {
-                    forkFrom.Add(block.Body.Id, block.Body.LastBlockId);
+                    forkFrom.Add(block.Id, block.LastBlockId);
                 }
             }
 
@@ -151,13 +157,38 @@ namespace MemeIum.Services.Blockchain
             return null;
         }
 
+        public BlockInfo LookUpBlockInfo(string Id)
+        {
+            var bb = LookUpBlock(Id);
+            var info = new BlockInfo()
+            {
+                Id=Id,
+                CreationTime = bb.TimeOfCreation,
+                LastBlockId = bb.Body.LastBlockId,
+                Height = bb.Body.Height
+            };
+
+            return info;
+        }
+
+        public BlockInfo LookUpBlockInfoByHeight(int height)
+        {
+            var atB = LookUpBlockInfo(Info.EndOfLongestChain);
+            for (int ii = 0; ii < Info.Height - height; ii++)
+            {
+                atB = LookUpBlockInfo(atB.LastBlockId);
+            }
+            return atB;
+        }
+
+
         public bool IsBlockInLongestChain(string blockid)
         {
             var at = Info.EndOfLongestChain;
 
             while (at != blockid)
             {
-                at = LookUpBlock(at).Body.LastBlockId;
+                at = LookUpBlockInfo(at).LastBlockId;
 
                 if (at == Configurations.GENESIS_BLOCK_ID)
                 {
@@ -166,6 +197,7 @@ namespace MemeIum.Services.Blockchain
             }
             return true;
         }
+
 
         public void SaveBlock(Block block)
         {
@@ -176,19 +208,79 @@ namespace MemeIum.Services.Blockchain
             }
         }
 
-        public void ParseInvitationRequest(InvitationRequest request)
+        public bool WantedTransaction(InvitationRequest transInvitationRequest)
         {
+            var atB = LookUpBlock(Info.EndOfLongestChain);
+            for (int ii = 0; ii < Configurations.TRANSACTION_WANT_LIMIT; ii++)
+            {
+                foreach (var transaction in atB.Body.Tx)
+                {
+                    if (transaction.Body.TransactionId == transInvitationRequest.DataId)
+                    {
+                        return false;
+                    }
+                }
+                atB = LookUpBlock(atB.Body.LastBlockId);
+            }
+            return true;
+        }
+
+        public void ParseInvitationRequest(InvitationRequest request,Peer from)
+        {
+            var req = new InvitationResponseRequest()
+            {
+                IsBlock = request.IsBlock,
+                WantedDataId = request.DataId
+            };
+            var took = false;
+
+            if (_askedForRequests.Exists(r => r.DataId == request.DataId && r.IsBlock == request.IsBlock))
+            {
+                return;
+            }
+
             if (request.IsBlock)
             {
                 var bb = LookUpBlock(request.DataId);
 
                 if (bb == null)
                 {
-
+                    took = true;
                 }
             }
             else
             {
+                if (WantedTransaction(request))
+                {
+                    took = true;
+                }
+            }
+
+            if (took)
+            {
+                _askedForRequests.Add(request);
+                _server.SendResponse(req, from);
+            }
+        }
+
+        public void ParseInvitationResponseRequest(InvitationResponseRequest request, Peer from)
+        {
+            if (request.IsBlock)
+            {
+                var bb = LookUpBlock(request.WantedDataId);
+
+                if (bb != null)
+                {
+                    var req = new BlockRequest()
+                    {
+                        Block = bb
+                    };
+                    _server.SendResponse(req, from);
+                }
+            }
+            else
+            {
+                //TODO: If it is in mineing pool then send it
             }
         }
     }
