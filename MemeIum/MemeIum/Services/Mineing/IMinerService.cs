@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
 using System.Threading;
+using MemeIum.Misc;
 using MemeIum.Misc.Transaction;
 
 namespace MemeIum.Services.Mineing
@@ -12,5 +13,6 @@ namespace MemeIum.Services.Mineing
         ObservableCollection<Transaction> MemPool { get; set; }
         List<Thread> CurrentWorkers { get; set; }
         void TryRestartingWorkers();
+        InBlockTransactionVOut GetMinerVOut(List<Transaction> tx,int height);
     }
 }

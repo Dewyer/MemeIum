@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using MemeIum.Misc;
@@ -20,12 +21,14 @@ namespace MemeIum.Services.CatchUp
         private IMappingService _mappingService;
         private IP2PServer _server;
         private IMinerService _minerService;
+        private IEventManager _eventManager;
 
         private string _catchDataFullPath;
 
         public bool CaughtUp { get; private set; }
         public Thread Checker { get; set; }
         private List<Transaction> bufferedTransactions;
+        private List<BlockInfo> bufferedBlockInfos;
         private bool shouldTryEnd;
         private string supposedLongestBlockId;
 
@@ -35,11 +38,13 @@ namespace MemeIum.Services.CatchUp
             _mappingService = Services.GetService<IMappingService>();
             _server = Services.GetService<IP2PServer>();
             _minerService = Services.GetService<IMinerService>();
+            _eventManager = Services.GetService<IEventManager>();
 
             _catchDataFullPath = $"{Configurations.CurrentPath}\\BlockChain\\Catchup";
             _logger.Log("Ketchup started to flow ....",1);
             CaughtUp = false;
             bufferedTransactions = new List<Transaction>();
+            bufferedBlockInfos = new List<BlockInfo>();
             supposedLongestBlockId = "";
             shouldTryEnd = false;
 
@@ -59,7 +64,7 @@ namespace MemeIum.Services.CatchUp
 
         private bool IsBlockBuffered(string id)
         {
-            return File.Exists($"{_catchDataFullPath}\\{id}.json");
+            return bufferedBlockInfos.FindAll(r=>r.Id == id).Count > 0;
         }
 
         public void ParseCatcherUpRequest(CatcherUpRequest request,Peer from)
@@ -98,7 +103,8 @@ namespace MemeIum.Services.CatchUp
 
         public Block LoadBufferedBlock(string id)
         {
-            var file = $"{_catchDataFullPath}\\{id}.json";
+            var newId = id.Replace('/', '-');
+            var file = $"{_catchDataFullPath}\\{newId}.json";
             if (File.Exists(file))
             {
                 var ss = File.ReadAllText(file);
@@ -140,12 +146,21 @@ namespace MemeIum.Services.CatchUp
 
                 if (!IsBlockBuffered(block.Block.Body.Id))
                 {
-                    File.WriteAllText($"{_catchDataFullPath}\\{block.Block.Body.Id}.json",JsonConvert.SerializeObject(block.Block));
+                    var newId = block.Block.Body.Id.Replace('/', '-');
+                    File.WriteAllText($"{_catchDataFullPath}\\{newId}.json",JsonConvert.SerializeObject(block.Block));
 
                     if (block.Block.Body.Id == supposedLongestBlockId)
                     {
                         shouldTryEnd = true;
                     }
+                    var bInfo = new BlockInfo()
+                    {
+                        Id = block.Block.Body.Id,
+                        CreationTime = block.Block.TimeOfCreation,
+                        Height = block.Block.Body.Height,
+                        LastBlockId = block.Block.Body.LastBlockId
+                    };
+                    bufferedBlockInfos.Add(bInfo);
                 }
             }
 
@@ -159,8 +174,6 @@ namespace MemeIum.Services.CatchUp
             }
         }
 
-
-
         private void LoadDataInOrder()
         {
             _logger.Log("Caught up ! Starting ..");
@@ -172,6 +185,14 @@ namespace MemeIum.Services.CatchUp
                 _logger.Log("Copied new block from catch : "+name);
                 File.Copy(file,$"{Configurations.CurrentPath}\\BlockChain\\Chain\\{name}");
                 
+            }
+            //process blocks in order
+            var order = bufferedBlockInfos.OrderBy(r => r.Height).ToList();
+
+            foreach (var blockInfo in order)
+            {
+                var bb = _blockChainService.LookUpBlock(blockInfo.Id);
+                _eventManager.PassNewTrigger(bb,EventTypes.EventType.NewBlock);
             }
             _blockChainService.TryLoadSavedInfo();
             _minerService.TryRestartingWorkers();
@@ -195,6 +216,41 @@ namespace MemeIum.Services.CatchUp
 
                 Thread.Sleep(1000*Configurations.Config.SecondsToWaitBetweenCatchUpLoops);
             }
+        }
+
+        public void ParseDidICatchUp(DidICatchUpRequest request, Peer from)
+        {
+            var catcherUp = new CatcherUpRequest()
+            {
+                EndOfLongestChain = _blockChainService.Info.EndOfLongestChain,
+                Invs = new List<InvitationRequest>()
+            };
+
+            foreach (var trans in _minerService.MemPool)
+            {
+                var inv = new InvitationRequest()
+                {
+                    DataId = trans.Body.TransactionId,
+                    IsBlock = false
+                };
+                catcherUp.Invs.Add(inv);
+            }
+
+            if (request.LastKnownEnd != _blockChainService.Info.EndOfLongestChain)
+            {
+                var newBs = _blockChainService.GetNewerBlockInfos(request.LastOnline, request.LastKnownEnd);
+                foreach (var blockInfo in newBs)
+                {
+                    var inv = new InvitationRequest()
+                    {
+                        DataId = blockInfo.Id,
+                        IsBlock = true
+                    };
+                    catcherUp.Invs.Add(inv);
+                }
+            }
+
+            _server.SendResponse(catcherUp,from);
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Security.Cryptography;
 using System.Text;
+using MemeIum.Misc.Transaction;
 using Newtonsoft.Json;
 
 namespace MemeIum.Misc
@@ -14,6 +15,17 @@ namespace MemeIum.Misc
         public string ToAddress { get; set; }
         public int Amount { get; set; }
         public string Id { get; set; }
+
+        public InBlockTransactionVOut GetInBlockTransactionVOut()
+        {
+            return new InBlockTransactionVOut()
+            {
+                FromAddress = this.FromAddress,
+                ToAddress = this.ToAddress,
+                Amount = this.Amount,
+                Id=this.Id
+            };
+        }
 
         public static void SetUniqueIdForVOut(TransactionVOut vout)
         {

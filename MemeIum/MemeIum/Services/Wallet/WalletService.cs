@@ -38,6 +38,15 @@ namespace MemeIum.Services.Wallet
 
         }
 
+        public void TryGenerateingNewkeys()
+        {
+            if (!TryLoadSavedKeys())
+            {
+                Logger.Log("Failed to find wallet keys, generating new ones");
+                GenerateNewKeys();
+            }
+        }
+
         public void Init()
         {
             Logger = Services.GetService<ILogger>();
@@ -46,15 +55,12 @@ namespace MemeIum.Services.Wallet
             PubKeysPath = $"{KeysFolderPath}\\pub.key";
             PrivKeysPath = $"{KeysFolderPath}\\priv.key";
 
-            if (!TryLoadSavedKeys())
-            {
-                Logger.Log("Failed to find wallet keys, generating new ones");
-                GenerateNewKeys();
-            }
+            TryGenerateingNewkeys();
         }
 
         public void GenerateNewKeys()
         {
+            _provider = new RSACryptoServiceProvider(2048);
             SaveKeys();
         }
 

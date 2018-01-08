@@ -119,7 +119,8 @@ namespace MemeIum.Services
             {
                 if (_catchUpService.CaughtUp)
                 {
-
+                    var req = JsonConvert.DeserializeObject<DidICatchUpRequest>(request);
+                    _catchUpService.ParseDidICatchUp(req,source);
                 }
             }
             else if (header.Type == 7)

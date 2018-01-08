@@ -56,9 +56,10 @@ namespace MemeIum.Services.Mineing
             }
         }
 
-        private int GetCurrentBlockReward()
+        private int GetCurrentBlockReward(int height)
         {
-            return Configurations.BLOCK_REWARD;
+            //Halver = 131400, eq = Ma
+            return (int)Math.Floor(Configurations.BLOCK_REWARD / (Math.Pow(2, Math.Floor(height / 131400f))));
         }
 
         private string GenerateRandomString()
@@ -74,18 +75,18 @@ namespace MemeIum.Services.Mineing
             return token;
         }
 
-        private TransactionVOut GetMinerVOut(List<Transaction> transactions)
+        public InBlockTransactionVOut GetMinerVOut(List<Transaction> transactions,int height)
         {
             var fees = transactions.Sum(CalculateFee);
             var vout = new TransactionVOut()
             {
-                Amount = fees + GetCurrentBlockReward(),
+                Amount = fees + GetCurrentBlockReward(height),
                 FromAddress = _walletService.Address,
                 ToAddress = _walletService.Address,
                 FromBlock = "0"
             };
             TransactionVOut.SetUniqueIdForVOut(vout);
-            return vout;
+            return vout.GetInBlockTransactionVOut();
         }
 
         private int CalculateFee(Transaction t)
@@ -117,6 +118,11 @@ namespace MemeIum.Services.Mineing
         private void Miner()
         {
             _logger.Log("New Miner",1);
+            if (MemPool.Count == 0)
+            {
+                return;
+            }
+
             var nounce = GenerateRandomString();
             var newInfo = new BlockInfo()
             {
@@ -134,7 +140,7 @@ namespace MemeIum.Services.Mineing
                 Height = newInfo.Height,
                 Id="",
                 LastBlockId = _blockChainService.Info.EndOfLongestChain,
-                MinerVOut = GetMinerVOut(choosenTxs),
+                MinerVOut = GetMinerVOut(choosenTxs,newInfo.Height),
                 Nounce = nounce,
                 Target = targetString,
                 Tx = choosenTxs

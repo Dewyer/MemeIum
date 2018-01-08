@@ -13,5 +13,6 @@ namespace MemeIum.Services.CatchUp
         Thread Checker { get; set; }
         void ParseCatcherUpRequest(CatcherUpRequest request,Peer from);
         void ParseCatchUpData(object data);
+        void ParseDidICatchUp(DidICatchUpRequest request,Peer from);
     }
 }

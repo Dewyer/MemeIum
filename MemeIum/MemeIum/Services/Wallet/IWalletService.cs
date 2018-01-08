@@ -12,5 +12,6 @@ namespace MemeIum.Services.Wallet
         string Address { get;}
         string PubKey { get; }
         Transaction MakeTransaction(TransactionBody body);
+        void TryGenerateingNewkeys();
     }
 }

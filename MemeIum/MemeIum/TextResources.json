@@ -1,0 +1,6 @@
+﻿{
+  "AsciArt": "",
+  "Separator": "=================================================================================================",
+  "HelpText": "wallet - Enter wallet\n'q' - Quits the application",
+  "HelpWalletText": "balance - Show the balance and info\n\tb - Backs down" 
+}

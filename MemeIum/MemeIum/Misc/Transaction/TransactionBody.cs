@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using MemeIum.Misc.Transaction;
 using Newtonsoft.Json;
 
 namespace MemeIum.Misc
@@ -14,7 +15,7 @@ namespace MemeIum.Misc
         public string Message { get; set; }
         public List<TransactionVIn> VInputs { get; set; }
 
-        public List<TransactionVOut> VOuts { get; set; }
+        public List<InBlockTransactionVOut> VOuts { get; set; }
 
         public static void SetUniqueIdForBody(TransactionBody body)
         {

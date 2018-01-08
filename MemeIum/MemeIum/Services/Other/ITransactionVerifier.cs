@@ -11,5 +11,8 @@ namespace MemeIum.Services.Other
     {
         bool Verify(Transaction transaction);
         TransactionVOut GetUnspeTransactionVOut(string id,out bool spent);
+        List<TransactionVOut> GetAllTransactionVOutsForAddress(string addr);
+        bool IsLoadedIn(string id);
+        void SetAsLoaded(string toId);
     }
 }

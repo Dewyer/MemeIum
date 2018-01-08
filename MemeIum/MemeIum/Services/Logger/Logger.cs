@@ -34,13 +34,21 @@ namespace MemeIum.Services
             File.AppendAllText(LogPath,$"Created : {DateTime.Now.ToString("F")}\n");
         }
 
-        public void Log(string msg, int level = 0)
+        public void Log(string msg, int level = 0,bool displayInfo = true)
         {
             if (level < 0 || level >= LevelPrefixes.Count)
             {
                 throw new Exception("Invalid loglevel specified.");
             }
-            var log = $"[{LevelPrefixes[level]}]{msg}";
+            string log = "";
+            if (displayInfo)
+            {
+                log = $"[{LevelPrefixes[level]}]{msg}";
+            }
+            else
+            {
+                log = msg;
+            }
 
             if (MinLogLevelToDisplay <= level)
             {
@@ -48,8 +56,42 @@ namespace MemeIum.Services
             }
             if (MinLogLevelToSave <= level)
             {
-                File.AppendAllText(LogPath,$"{DateTime.Now.ToString("F")}//{log}");
+                File.AppendAllText(LogPath,$"{DateTime.Now.ToString("F")}//{log}\n");
             }
+        }
+
+        public void LogPartialLine(string msg, int level = 0, bool displayInfo = true)
+        {
+            if (level < 0 || level >= LevelPrefixes.Count)
+            {
+                throw new Exception("Invalid loglevel specified.");
+            }
+            string log = "";
+            if (displayInfo)
+            {
+                log = $"[{LevelPrefixes[level]}]{msg}";
+            }
+            else
+            {
+                log = msg;
+            }
+
+            if (MinLogLevelToDisplay <= level)
+            {
+                Console.Write(log);
+            }
+            if (MinLogLevelToSave <= level)
+            {
+                File.AppendAllText(LogPath, $"{DateTime.Now.ToString("F")}//{log}");
+            }
+
+        }
+
+        public string LogReadLine()
+        {
+            var cc = Console.ReadLine();
+            File.AppendAllText(LogPath, $"{DateTime.Now.ToString("F")}//{cc}\n");
+            return cc;
         }
     }
 }

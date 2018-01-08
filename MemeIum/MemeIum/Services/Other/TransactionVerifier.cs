@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
@@ -33,14 +34,59 @@ namespace MemeIum.Services.Other
             _blockChainService = Services.GetService<IBlockChainService>();
 
             TryConnectToUnspentDB();
+
+            if (IsLoadedIn(_blockChainService.Info.EndOfLongestChain))
+            {
+                _logger.Log("Need to backload the Unspent db for some reasons");
+                LoadEveryNewBlock();
+            }
         }
 
         public void CreateBaseDb()
         {
             string sql = @"CREATE TABLE unspent (id varchar(50) PRIMARY KEY,fromaddr varchar(50),toaddr varchar(50),amount varchar(70),inblock varchar(50),spent varchar(1));";
+            sql += "CREATE TABLE loadeds (id varchar(50));";
+
             var cmd = _unspentConnection.CreateCommand();
             cmd.CommandText = sql;
 
+            cmd.ExecuteNonQuery();
+        }
+
+        public void LoadEveryNewBlock()
+        {
+            var chainPath = $"{Configurations.CurrentPath}\\BlockChain\\Chain\\";
+            var blocks = Directory.GetFiles(chainPath);
+
+            foreach (var block in blocks)
+            {
+                var pathTokens = block.Split('\\');
+                var id = pathTokens[pathTokens.Length - 1].Split('.')[0];
+                var bb = _blockChainService.LookUpBlock(id);
+
+                if (!IsLoadedIn(bb.Body.Id))
+                {
+                    _logger.Log($"Backloaded :{bb.Body.Id}-block");
+                    LoadBlockToUnspentDb(bb);
+                }
+            }
+        }
+
+        public bool IsLoadedIn(string id)
+        {
+            var cmd = _unspentConnection.CreateCommand();
+            cmd.CommandText = "SELECT * FROM loadeds WHERE id=$id";
+            cmd.Parameters.AddWithValue("id", id);
+            var reader = cmd.ExecuteReader();
+            return reader.HasRows;
+
+        }
+
+        public void SetAsLoaded(string toId)
+        {
+            var cmd = _unspentConnection.CreateCommand();
+            cmd.CommandText = "INSERT INTO loadeds (id) VALUES ($id)";
+            cmd.Parameters.AddWithValue("id", toId);
             cmd.ExecuteNonQuery();
         }
 
@@ -68,25 +114,38 @@ namespace MemeIum.Services.Other
 
         }
 
-        public void OnNewBlock(object obj)
+        public void LoadBlockToUnspentDb(Block block)
         {
-            var block = (Block) obj;
             foreach (var transaction in block.Body.Tx)
             {
                 foreach (var vout in transaction.Body.VOuts)
                 {
-                    RegisterVout(vout);
+                    RegisterVout(vout, block);
                 }
                 foreach (var input in transaction.Body.VInputs)
                 {
                     SpendInput(input.OutputId);
                 }
             }
-
+            SetAsLoaded(block.Body.Id);
         }
 
-        public void RegisterVout(TransactionVOut vout)
+        public void OnNewBlock(object obj)
         {
+            var block = (Block) obj;
+            LoadBlockToUnspentDb(block);
+        }
+
+        public void RegisterVout(InBlockTransactionVOut voutIn,Block block)
+        {
+            var vout = new TransactionVOut()
+            {
+                Amount = voutIn.Amount,
+                FromAddress = voutIn.FromAddress,
+                FromBlock = block.Body.Id,
+                Id=voutIn.Id,
+                ToAddress = voutIn.ToAddress
+            };
             var cmd = vout.CreateInsertCommand();
             cmd.Connection = _unspentConnection;
             cmd.ExecuteNonQuery();
@@ -122,7 +181,7 @@ namespace MemeIum.Services.Other
             cmd.CommandText = sql;
             cmd.Parameters.AddWithValue("id", id);
             var reader = cmd.ExecuteReader();
-            if (reader.FieldCount != 1)
+            if (reader.HasRows)
             {
                 spent = true;
                 return null;

@@ -49,13 +49,13 @@ namespace MemeIum
             Services.Services.RegisterSingeleton<ILogger,Logger>();
             Services.Services.RegisterSingeleton<IEventManager,EventManager>();
 
-            Services.Services.RegisterSingeleton<ITransactionVerifier,TransactionVerifier>();
             Services.Services.RegisterSingeleton<IBlockVerifier,BlockVerifier>();
             Services.Services.RegisterSingeleton<IWalletService,WalletService>();
             Services.Services.RegisterSingeleton<IBlockChainService,BlockChainService>();
             Services.Services.RegisterSingeleton<IDifficultyService,DifficultyService>();
             Services.Services.RegisterSingeleton<IMinerService,MinerService>();
 
+            Services.Services.RegisterSingeleton<ITransactionVerifier,TransactionVerifier>();
             Services.Services.RegisterSingeleton<IP2PServer,P2PServer>();
             Services.Services.RegisterSingeleton<IMappingService,MappingService>();
             Services.Services.RegisterSingeleton<ICatchUpService,CatchUpService>();
@@ -66,13 +66,6 @@ namespace MemeIum
             Logger.MinLogLevelToSave = Configurations.Config.MinLogLevelToSave;
             Logger.MinLogLevelToDisplay = Configurations.Config.MinLogLevelToDisplay;
             Logger.Log("Starting up node...");
-            if (true)
-            {
-                var mck = new MockClient();
-                mck.MockTest();
-            }
-
-            Console.ReadLine();
         }
     }
 }

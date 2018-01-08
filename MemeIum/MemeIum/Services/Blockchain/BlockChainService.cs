@@ -186,7 +186,8 @@ namespace MemeIum.Services.Blockchain
 
         public Block LookUpBlock(string Id)
         {
-            var fileName = $"{_blockChainFullPath}\\{Id}.block";
+            var newId = Id.Replace('/', '-');
+            var fileName = $"{_blockChainFullPath}\\{newId}.block";
             if (File.Exists(fileName))
             {
                 var text = File.ReadAllText(fileName);
@@ -226,7 +227,6 @@ namespace MemeIum.Services.Blockchain
             return atB;
         }
 
-
         public bool IsBlockInLongestChain(string blockid)
         {
             var at = Info.EndOfLongestChain;
@@ -243,10 +243,10 @@ namespace MemeIum.Services.Blockchain
             return true;
         }
 
-
         public void SaveBlock(Block block)
         {
-            var fileName = $"{_blockChainFullPath}\\{block.Body.Id}.block";
+            var newId = block.Body.Id.Replace('/', '-');
+            var fileName = $"{_blockChainFullPath}\\{newId}.block";
             if (!File.Exists(fileName))
             {
                 File.WriteAllText(fileName,JsonConvert.SerializeObject(block));
@@ -368,5 +368,17 @@ namespace MemeIum.Services.Blockchain
             }
         }
 
+        public List<BlockInfo> GetNewerBlockInfos(DateTime fromtime, string tillId)
+        {
+            var bb = new List<BlockInfo>();
+            var atB = LookUpBlockInfo(Info.EndOfLongestChain);
+            while (atB.CreationTime >= fromtime)
+            {
+                bb.Add(atB);
+                atB = LookUpBlockInfo(atB.LastBlockId);
+            }
+
+            return bb;
+        }
     }
 }
