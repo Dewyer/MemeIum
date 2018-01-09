@@ -5,7 +5,7 @@
   "MaxPeersHave": 10000,
   "SecondsToWaitForAddresses": 20,
   "ShouldMine": true,
-  "MaxThreadsToMineOn": 2,
+  "MaxThreadsToMineOn": 1,
   "SecondsToWaitBetweenCatchUpLoops": 60,
   "MinLogLevelToSave": 0,
   "MinLogLevelToDisplay": 0

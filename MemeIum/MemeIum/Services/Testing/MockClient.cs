@@ -79,8 +79,8 @@ namespace MemeIum.Services
             var max = BigInteger.Pow(2, 256);
             //want 2000 hashes to run
             //chances to roll good = (max-target)/max * 2000 = 1, or 1999x / 2000 = y
-            var target = BigInteger.Multiply(1999, max);
-            target = BigInteger.Divide(target, 2000);
+            var target = BigInteger.Multiply(19999999, max);
+            target = BigInteger.Divide(target, 20000000);
             var maxVaStr = Convert.ToBase64String(target.ToByteArray());
 
             Console.WriteLine(maxVaStr);
@@ -88,7 +88,7 @@ namespace MemeIum.Services
 
         public void CreateGenesis()
         {
-            var pp = "C:\\Users\\gerge\\Documents\\MemeIum\\Keys";
+            var pp = "F:\\Projects\\MemeIum\\Keys";
             var addresses = $"{pp}\\addr.txt";
 
             Logger.Log("Genesis tests", 1);

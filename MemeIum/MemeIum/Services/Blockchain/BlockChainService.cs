@@ -180,8 +180,8 @@ namespace MemeIum.Services.Blockchain
                 }
             }
 
-            Info.EndOfLongestChain = maxAt;
-            Info.Height = maxChain;
+            Info.EndOfLongestChain = maxAt.Replace('-','/');
+            Info.Height = maxChain-1;
         }
 
         public Block LookUpBlock(string Id)
@@ -235,7 +235,7 @@ namespace MemeIum.Services.Blockchain
             {
                 at = LookUpBlockInfo(at).LastBlockId;
 
-                if (at == Configurations.GENESIS_BLOCK_ID)
+                if (at == "0")
                 {
                     return false;
                 }

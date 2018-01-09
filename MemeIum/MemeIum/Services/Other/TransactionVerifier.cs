@@ -203,7 +203,7 @@ namespace MemeIum.Services.Other
             cmd.CommandText = sql;
             cmd.Parameters.AddWithValue("id", id);
             var reader = cmd.ExecuteReader();
-            if (reader.HasRows)
+            if (!reader.HasRows)
             {
                 spent = true;
                 return null;
@@ -229,11 +229,6 @@ namespace MemeIum.Services.Other
             }
 
             if (!VerifyAddress(transaction))
-            {
-                return false;
-            }
-
-            if (!VerifyId(transaction))
             {
                 return false;
             }
@@ -300,12 +295,9 @@ namespace MemeIum.Services.Other
 
         public bool VerifyId(Transaction transaction)
         {
-            var id = transaction.Body.TransactionId;
-            transaction.Body.TransactionId = "42";
-            var ss = JsonConvert.SerializeObject(transaction.Body);
-            var hash = Convert.ToBase64String(SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(ss)));
-            transaction.Body.TransactionId = id;
-            return hash == id;
+            var oldH = transaction.Body.TransactionId;
+            TransactionBody.SetUniqueIdForBody(transaction.Body);
+            return transaction.Body.TransactionId == oldH;
         }
 
         public bool VerifySignature(Transaction transaction)
@@ -321,7 +313,7 @@ namespace MemeIum.Services.Other
                 RSACryptoServiceProvider RSAalg = new RSACryptoServiceProvider();
                 RSAalg.ImportParameters(pubKey);
 
-                return RSAalg.VerifyData(DataToVerify, new SHA1CryptoServiceProvider(), SignedData);
+                return RSAalg.VerifyData(DataToVerify, new SHA256CryptoServiceProvider(), SignedData);
 
             }
             catch (CryptographicException e)

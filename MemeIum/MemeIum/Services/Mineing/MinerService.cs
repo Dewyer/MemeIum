@@ -114,13 +114,21 @@ namespace MemeIum.Services.Mineing
 
         private bool IsNounceGood(BigInteger target,Block block)
         {
-            var bHash =new BigInteger( Convert.FromBase64String(block.Body.Id));
+            var bytes = Convert.FromBase64String(block.Body.Id);
+            var bHash =new BigInteger( bytes);
+            if (bHash < 0)
+            {
+                bHash *= -1;
+            }
+            //var bytesNew = bHash.ToByteArray();
+            //Console.WriteLine("Tried :{0}",bHash.ToString("R"));
+            //Console.WriteLine("For target : {0}",target.ToString("R"));
             return bHash <= target;
         }
 
         private void Miner()
         {
-            _logger.Log("New Miner",1);
+            Console.WriteLine("New miner {0}",Thread.CurrentThread.ManagedThreadId);
             if (MemPool.Count == 0)
             {
                 return;
@@ -153,14 +161,24 @@ namespace MemeIum.Services.Mineing
                 TimeOfCreation = DateTime.UtcNow,
                 Body = bBody
             };
-
+            var lastTime = DateTime.UtcNow;
+            var tries = 0;
+            Block.SetUniqueBlockId(block);
             while (!IsNounceGood(target,block))
             {
                 nounce = GenerateRandomString();
                 block.TimeOfCreation = DateTime.UtcNow;
+                block.Body.Nounce = nounce;
+                block.TimeOfCreation = DateTime.UtcNow;
                 Block.SetUniqueBlockId(block);
+                tries++;
+                if (tries % 10000 == 0)
+                {
+                    Console.WriteLine("Hashing at : {0}",(DateTime.UtcNow-lastTime).TotalSeconds);
+                    lastTime = DateTime.UtcNow;
+                }
             }
-            _logger.Log("Miner finished", 1);
+            Console.WriteLine("Miner finished");
             _eventManager.PassNewTrigger(block,EventTypes.EventType.NewBlock);
         }
 

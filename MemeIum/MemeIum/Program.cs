@@ -70,6 +70,7 @@ namespace MemeIum
             var mck = new MockClient();
             //mck.GenerateRandomWallets(100);
             //mck.CreateGenesis();
+            //mck.FirstTarget();
         }
     }
 }
