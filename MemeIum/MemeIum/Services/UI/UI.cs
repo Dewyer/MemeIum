@@ -8,6 +8,9 @@ using MemeIum.Services.Mineing;
 using MemeIum.Services.Other;
 using MemeIum.Services.Wallet;
 using Newtonsoft.Json;
+using MemeIum.Misc.Transaction;
+using MemeIum.Misc;
+using MemeIum.Services.Eventmanagger;
 
 namespace MemeIum.Services.UI
 {
@@ -18,6 +21,7 @@ namespace MemeIum.Services.UI
         private IMinerService _minerService;
         private ITransactionVerifier _transactionVerifier;
         private IWalletService _walletService;
+        private IEventManager _eventManager;
 
         private int _indent;
         private int InIndent
@@ -40,6 +44,7 @@ namespace MemeIum.Services.UI
             _minerService = Services.GetService<IMinerService>();
             _transactionVerifier = Services.GetService<ITransactionVerifier>();
             _walletService = Services.GetService<IWalletService>();
+            _eventManager = Services.GetService<IEventManager>();
 
             var textRes = $"{Configurations.CurrentPath}\\TextResources.json";
             res = JsonConvert.DeserializeObject<TextResources>(File.ReadAllText(textRes));
@@ -77,9 +82,56 @@ namespace MemeIum.Services.UI
         {
             var addr = _walletService.Address;
             var vouts = _transactionVerifier.GetAllTransactionVOutsForAddress(addr);
-            var balance = vouts.Sum(r => r.Amount);
+            var balance = vouts.Sum(r => r.Amount) / 100000f;
 
-            _logger.Log(GetIndentTabs()+$"Address : {addr} , Balance : {balance}",displayInfo:false);
+            _logger.Log(GetIndentTabs()+$"Address : {addr} , Balance : {balance} Memeium",displayInfo:false);
+        }
+
+        public void SendTShort(string to, float ammount,string msg) {
+            var vouts = _transactionVerifier.GetAllTransactionVOutsForAddress(_walletService.Address);
+            var balanceRips = vouts.Sum(r => r.Amount);
+            var balanceC = balanceRips / 100000f;
+            var amountInRips =(int)( ammount * 100000);
+
+            if (balanceC >= ammount)
+            {
+                var inps = new List<TransactionVIn>();
+
+                foreach (var vv in vouts)
+                {
+                    var tVin = new TransactionVIn()
+                    {
+                        FromBlockId = vv.FromBlock,
+                        OutputId = vv.Id
+                    };
+                    inps.Add(tVin);
+                }
+
+                var vout = new TransactionVOut()
+                {
+                    Amount = amountInRips,
+                    FromAddress = _walletService.Address,
+                    ToAddress = to,
+
+                };
+                TransactionVOut.SetUniqueIdForVOut(vout);
+
+                var body = new TransactionBody()
+                {
+                    FromAddress = _walletService.Address,
+                    Message = msg,
+                    PubKey = _walletService.PubKey,
+                    VInputs = inps,
+                    VOuts = new List<InBlockTransactionVOut> { vout.GetInBlockTransactionVOut() }
+                };
+                TransactionBody.SetUniqueIdForBody(body);
+                var trans = _walletService.MakeTransaction(body);
+
+                _eventManager.PassNewTrigger(trans, EventTypes.EventType.NewTransaction);
+            }
+            else {
+                _logger.Log("Insufficent funds!");
+            }
         }
 
         public void StartWalletLoop()
@@ -90,13 +142,19 @@ namespace MemeIum.Services.UI
             {
                 LogCmdInputToIndent();
                 var cmdBody = _logger.LogReadLine().ToLower();
+                var tokens = cmdBody.Split(' ');
                 if (cmdBody == "balance")
                 {
                     ShowBalance();
                 }
+                else if (tokens[0] == "sendtshort" && tokens.Length == 4)
+                {
+                    var am = float.Parse(tokens[3]);
+                    SendTShort(tokens[1], am,tokens[2]);
+                }
                 else if (cmdBody == "help")
                 {
-                    _logger.Log(GetIndentTabs()+res.HelpWalletText,displayInfo:false);
+                    _logger.Log(GetIndentTabs() + res.HelpWalletText, displayInfo: false);
                 }
                 else if (cmdBody == "b")
                 {

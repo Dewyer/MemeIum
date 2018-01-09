@@ -11,6 +11,7 @@ using MemeIum.Misc.Transaction;
 using MemeIum.Requests;
 using MemeIum.Services.Blockchain;
 using MemeIum.Services.Eventmanagger;
+using MemeIum.Services.Mineing;
 using Newtonsoft.Json;
 
 namespace MemeIum.Services.Other
@@ -22,6 +23,7 @@ namespace MemeIum.Services.Other
         private string _unspentDbFullPath;
         private SQLiteConnection _unspentConnection;
         private IBlockChainService _blockChainService;
+        private IMinerService _minerService;
 
         public void Init()
         {
@@ -30,12 +32,14 @@ namespace MemeIum.Services.Other
 
             var ev = Services.GetService<IEventManager>();
             ev.RegisterEventListener(OnNewBlock,EventTypes.EventType.NewVerifiedBlock);
+            ev.RegisterEventListener(OnNewTransaction, EventTypes.EventType.NewTransaction);
 
             _blockChainService = Services.GetService<IBlockChainService>();
+            _minerService = Services.GetService<IMinerService>();
 
             TryConnectToUnspentDB();
 
-            if (IsLoadedIn(_blockChainService.Info.EndOfLongestChain))
+            if (!IsLoadedIn(_blockChainService.Info.EndOfLongestChain))
             {
                 _logger.Log("Need to backload the Unspent db for some reasons");
                 LoadEveryNewBlock();
@@ -78,7 +82,10 @@ namespace MemeIum.Services.Other
             cmd.CommandText = "SELECT * FROM loadeds WHERE id=$id";
             cmd.Parameters.AddWithValue("id", id);
             var reader = cmd.ExecuteReader();
-            return reader.HasRows;
+            while (reader.Read()) {
+                return true;
+            }
+            return false;
 
         }
 
@@ -127,7 +134,22 @@ namespace MemeIum.Services.Other
                     SpendInput(input.OutputId);
                 }
             }
+            RegisterVout(block.Body.MinerVOut,block);
             SetAsLoaded(block.Body.Id);
+        }
+
+        public void OnNewTransaction(object obj)
+        {
+            var trans = (Transaction)obj;
+            if (Verify(trans))
+            {
+                _logger.Log($"New transaction {trans.Body.TransactionId}");
+                _minerService.MemPool.Add(trans);
+
+            }
+            else {
+                _logger.Log($"Bad new transaction {trans.Body.TransactionId}");
+            }
         }
 
         public void OnNewBlock(object obj)

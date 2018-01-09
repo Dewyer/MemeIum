@@ -93,7 +93,10 @@ namespace MemeIum.Services.Mineing
         {
             var inp = t.Body.VInputs.Sum(r => _transactionVerifier.GetUnspeTransactionVOut(r.OutputId,out bool spent).Amount);
             var outp = t.Body.VOuts.Sum(r => r.Amount);
-            return inp - outp;
+            if (inp - outp >= 0) {
+                return 0;
+            } 
+            return 0;
         }
 
         private List<Transaction> ChooseTxs()

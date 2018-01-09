@@ -66,6 +66,10 @@ namespace MemeIum
             Logger.MinLogLevelToSave = Configurations.Config.MinLogLevelToSave;
             Logger.MinLogLevelToDisplay = Configurations.Config.MinLogLevelToDisplay;
             Logger.Log("Starting up node...");
+
+            var mck = new MockClient();
+            //mck.GenerateRandomWallets(100);
+            //mck.CreateGenesis();
         }
     }
 }

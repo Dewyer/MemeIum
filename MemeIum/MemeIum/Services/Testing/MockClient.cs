@@ -54,8 +54,8 @@ namespace MemeIum.Services
         {
             var wallet = Services.GetService<IWalletService>();
 
-            var pp = "F:\\Projects\\MemeIum\\Keys\\";
-            var otherP = "F:\\Projects\\MemeIum\\MemeIum\\MemeIum\\bin\\Debug\\netcoreapp2.0\\Keys";
+            var pp = "C:\\Users\\gerge\\Documents\\MemeIum\\Keys";
+            var otherP = "C:\\Users\\gerge\\Documents\\MemeIum\\MemeIum\\MemeIum\\bin\\Debug\\netcoreapp2.0\\Keys";
 
             var addresses = $"{pp}\\addr.txt";
             var addrs = new List<string>();
@@ -88,7 +88,7 @@ namespace MemeIum.Services
 
         public void CreateGenesis()
         {
-            var pp = "F:\\Projects\\MemeIum\\Keys\\";
+            var pp = "C:\\Users\\gerge\\Documents\\MemeIum\\Keys";
             var addresses = $"{pp}\\addr.txt";
 
             Logger.Log("Genesis tests", 1);
@@ -102,13 +102,14 @@ namespace MemeIum.Services
             var toAddr = new List<string>(File.ReadAllLines(addresses));
             foreach (var addr in toAddr)
             {
-                var vout = new InBlockTransactionVOut()
+                var vout = new TransactionVOut()
                 {
                     Amount = 10000,
                     FromAddress = ww.Address,
                     ToAddress = addr
                 };
-                vouts.Add(vout);
+                TransactionVOut.SetUniqueIdForVOut(vout);
+                vouts.Add(vout.GetInBlockTransactionVOut());
             }
 
             var tBody = new TransactionBody()
