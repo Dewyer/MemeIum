@@ -14,5 +14,7 @@ namespace MemeIum.Services.Mineing
         List<Thread> CurrentWorkers { get; set; }
         void TryRestartingWorkers();
         InBlockTransactionVOut GetMinerVOut(List<Transaction> tx,int height);
+        bool HasTransactionInMemPool(string transactionId);
+
     }
 }

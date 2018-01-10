@@ -46,6 +46,8 @@ namespace MemeIum.Services.Mineing
             MemPool.CollectionChanged += MemPool_CollectionChanged;
 
             CurrentWorkers = new List<Thread>();
+
+            TryRestartingWorkers();
         }
 
         public void TryRestartingWorkers()
@@ -89,6 +91,16 @@ namespace MemeIum.Services.Mineing
             return vout.GetInBlockTransactionVOut();
         }
 
+        public bool HasTransactionInMemPool(string transactionId)
+        {
+            if (MemPool.ToList().FindAll(r => r.Body.TransactionId == transactionId)
+                    .Count > 0)
+            {
+                return true;
+            }
+            return false;
+        }
+
         private int CalculateFee(Transaction t)
         {
             var inp = t.Body.VInputs.Sum(r => _transactionVerifier.GetUnspeTransactionVOut(r.OutputId,out bool spent).Amount);
@@ -120,15 +132,12 @@ namespace MemeIum.Services.Mineing
             {
                 bHash *= -1;
             }
-            //var bytesNew = bHash.ToByteArray();
-            //Console.WriteLine("Tried :{0}",bHash.ToString("R"));
-            //Console.WriteLine("For target : {0}",target.ToString("R"));
             return bHash <= target;
         }
 
         private void Miner()
         {
-            Console.WriteLine("New miner {0}",Thread.CurrentThread.ManagedThreadId);
+            Console.WriteLine("[Info]New miner {0}",Thread.CurrentThread.ManagedThreadId);
             if (MemPool.Count == 0)
             {
                 return;
@@ -164,6 +173,8 @@ namespace MemeIum.Services.Mineing
             var lastTime = DateTime.UtcNow;
             var tries = 0;
             Block.SetUniqueBlockId(block);
+            var totalRips = block.Body.MinerVOut.Amount;
+
             while (!IsNounceGood(target,block))
             {
                 nounce = GenerateRandomString();
@@ -174,7 +185,7 @@ namespace MemeIum.Services.Mineing
                 tries++;
                 if (tries % 10000 == 0)
                 {
-                    Console.WriteLine("Hashing at : {0}",(DateTime.UtcNow-lastTime).TotalSeconds);
+                    Console.WriteLine("[MinerInfo]Hashing at - {0}/10KHs | Working on {1} rips of block",(DateTime.UtcNow-lastTime).TotalSeconds,totalRips.ToString());
                     lastTime = DateTime.UtcNow;
                 }
             }
@@ -236,4 +247,6 @@ namespace MemeIum.Services.Mineing
 
     }
 }
+
+
 

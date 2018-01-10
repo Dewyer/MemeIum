@@ -45,6 +45,7 @@ namespace MemeIum
 
         static void Main(string[] args)
         {
+
             LoadCommandLineArgs(args);
             Services.Services.RegisterSingeleton<ILogger,Logger>();
             Services.Services.RegisterSingeleton<IEventManager,EventManager>();
@@ -71,6 +72,7 @@ namespace MemeIum
             //mck.GenerateRandomWallets(100);
             //mck.CreateGenesis();
             //mck.FirstTarget();
+
         }
     }
 }

@@ -144,7 +144,12 @@ namespace MemeIum.Services.Other
             if (Verify(trans))
             {
                 _logger.Log($"New transaction {trans.Body.TransactionId}");
-                _minerService.MemPool.Add(trans);
+                if (!_minerService.HasTransactionInMemPool(trans.Body.TransactionId))
+                    _minerService.MemPool.Add(trans);
+                else
+                {
+                    _logger.Log("Already had transaction received",1);
+                }
 
             }
             else {

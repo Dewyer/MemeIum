@@ -77,13 +77,11 @@ namespace MemeIum.Services
         public void FirstTarget()
         {
             var max = BigInteger.Pow(2, 256);
-            //want 2000 hashes to run
-            //chances to roll good = (max-target)/max * 2000 = 1, or 1999x / 2000 = y
-            var target = BigInteger.Multiply(19999999, max);
-            target = BigInteger.Divide(target, 20000000);
-            var maxVaStr = Convert.ToBase64String(target.ToByteArray());
+            var target = max*153;
+            target /= 1000000;
+            var b64 = Convert.ToBase64String(target.ToByteArray());
 
-            Console.WriteLine(maxVaStr);
+            Console.WriteLine(b64);
         }
 
         public void CreateGenesis()
@@ -128,7 +126,7 @@ namespace MemeIum.Services
                 LastBlockId = "0",
                 MinerVOut = miner.GetMinerVOut(tx,0),
                 Nounce = "42",
-                Target = "rBxaZDvfT42XbhKDwMqhRbbz/dR46SYxCKwcWmQ73/8A",
+                Target = "nSy13m+044bfTbfsEP+wpUdTPZl/9E2aBkXzABb59f8A",
                 Tx=tx
                 
             };
@@ -146,3 +144,4 @@ namespace MemeIum.Services
         }
     }
 }
+

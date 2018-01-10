@@ -29,6 +29,8 @@ namespace MemeIum.Services.Blockchain
         private string _blockChainFullPath;
 
         private List<InvitationRequest> _askedForRequests;
+        private SQLiteConnection _blockInfoDb;
+        private string _blockInfoDbFullPath;
 
         public LocalChainInfo Info { get; set; }
 
@@ -36,6 +38,7 @@ namespace MemeIum.Services.Blockchain
         {
             _blockChainPath = Configurations.CurrentPath + "\\BlockChain\\";
             _blockChainFullPath = $"{_blockChainPath}\\Chain\\";
+            _blockInfoDbFullPath = _blockChainPath + "\\Data\\BlockInfo.sqlite";
 
             _logger = Services.GetService<ILogger>();
             _transactionVerifier = Services.GetService<ITransactionVerifier>();
@@ -46,9 +49,36 @@ namespace MemeIum.Services.Blockchain
             _mappingService = Services.GetService<IMappingService>();
             _minerService = Services.GetService<IMinerService>();
 
+            TryConnectToBlockInfoDb();
             TryLoadSavedInfo();
-            
             _askedForRequests = new List<InvitationRequest>();
+        }
+
+        private void CreateNewDb()
+        {
+            SQLiteConnection.CreateFile(_blockInfoDbFullPath);
+            _blockInfoDb = new SQLiteConnection($"Data Source={_blockInfoDbFullPath}");
+            _blockInfoDb.Open();
+            var creatorSql = "CREATE TABLE blockinfo (id varchar(50) PRIMARY KEY,lastblockid varchar(50),createdatticks varchar(50),height INTEGER,target varchar(50));";
+            var cmd = _blockInfoDb.CreateCommand();
+            cmd.CommandText = creatorSql;
+            cmd.ExecuteNonQuery();
+
+            _logger.Log("Loading genesis block in.");
+            SaveToDb(LookUpBlock(Configurations.GENESIS_BLOCK_ID));
+        }
+
+        private void TryConnectToBlockInfoDb()
+        {
+            if (!File.Exists(_blockInfoDbFullPath))
+            {
+                CreateNewDb();
+            }
+            else
+            {
+                _blockInfoDb = new SQLiteConnection($"Data Source={_blockInfoDbFullPath}");
+                _blockInfoDb.Open();
+            }
         }
 
         private void OnNewBlock(object obj)
@@ -128,60 +158,25 @@ namespace MemeIum.Services.Blockchain
             SaveLocalInfo();
         }
 
-        private int getChainLen(Dictionary<string, string> tree,Dictionary<string,int> forkLens,string id)
-        {
-            var ll = tree[id];
-            var len = 0;
-            while (ll != "0")
-            {
-                ll = tree[ll];
-                len++;
-                if (forkLens.ContainsKey(ll))
-                {
-                    len = forkLens[ll];
-                    break;
-                }
-                else
-                {
-                    forkLens.Add(ll, len);
-                }
-            }
-            len++;
-            return len;
-        }
-
         public void CalculateLongestChain()
         {
             _logger.Log("Calculateing new longest chain", 1);
-            var blockNames = Directory.GetFiles(_blockChainFullPath);
-
-            var forkFrom = new Dictionary<string, string>();
-            var forkLensFrom = new Dictionary<string, int>();
-            foreach (var blockName in blockNames)
+            var cmd = _blockInfoDb.CreateCommand();
+            cmd.CommandText = "SELECT * FROM blockinfo ORDER BY height,createdatticks DESC;";
+            var reader = cmd.ExecuteReader();
+            if (reader.HasRows)
             {
-                var bPath = blockName.Split('\\');
-                var bId = bPath[bPath.Length - 1].Split('.')[0];
-                var block = LookUpBlockInfo(bId);
-                if (block != null)
-                {
-                    forkFrom.Add(block.Id, block.LastBlockId);
-                }
+                reader.Read();
+                var info = BlockInfo.FromSqlReader(reader);
+                Info.EndOfLongestChain = info.Id;
+                Info.Height = info.Height;
             }
-
-            var maxChain = 0;
-            var maxAt = "0";
-            foreach (var fork in forkFrom)
+            else
             {
-                var ll = getChainLen(forkFrom, forkLensFrom, fork.Key);
-                if (maxChain < ll)
-                {
-                    maxChain = ll;
-                    maxAt = fork.Key;
-                }
-            }
+                Info.EndOfLongestChain = "0";
+                Info.Height = -1;
 
-            Info.EndOfLongestChain = maxAt.Replace('-','/');
-            Info.Height = maxChain-1;
+            }
         }
 
         public Block LookUpBlock(string Id)
@@ -203,28 +198,34 @@ namespace MemeIum.Services.Blockchain
             return null;
         }
 
-        public BlockInfo LookUpBlockInfo(string Id)
+        public BlockInfo LookUpBlockInfo(string id)
         {
-            var bb = LookUpBlock(Id);
-            var info = new BlockInfo()
+            var cmd = _blockInfoDb.CreateCommand();
+            cmd.CommandText = "SELECT * FROM blockinfo WHERE id=$id";
+            cmd.Parameters.AddWithValue("id", id);
+            var reader = cmd.ExecuteReader();
+            if (!reader.HasRows)
             {
-                Id=Id,
-                CreationTime = bb.TimeOfCreation,
-                LastBlockId = bb.Body.LastBlockId,
-                Height = bb.Body.Height
-            };
+                return null;
+            }
+            reader.Read();
 
-            return info;
+            return BlockInfo.FromSqlReader(reader);
         }
 
         public BlockInfo LookUpBlockInfoByHeight(int height)
         {
-            var atB = LookUpBlockInfo(Info.EndOfLongestChain);
-            for (int ii = 0; ii < Info.Height - height; ii++)
+            var cmd = _blockInfoDb.CreateCommand();
+            cmd.CommandText = "SELECT * FROM blockinfo WHERE height=$h";
+            cmd.Parameters.AddWithValue("h", height);
+            var reader = cmd.ExecuteReader();
+            if (!reader.HasRows)
             {
-                atB = LookUpBlockInfo(atB.LastBlockId);
+                return null;
             }
-            return atB;
+            reader.Read();
+
+            return BlockInfo.FromSqlReader(reader);
         }
 
         public bool IsBlockInLongestChain(string blockid)
@@ -233,14 +234,31 @@ namespace MemeIum.Services.Blockchain
 
             while (at != blockid)
             {
-                at = LookUpBlockInfo(at).LastBlockId;
-
-                if (at == "0")
+                var b = LookUpBlockInfo(at);
+                if (b == null)
                 {
                     return false;
                 }
+                at =b.LastBlockId;
             }
             return true;
+        }
+
+        public void SaveToDb(Block block)
+        {
+            var last = LookUpBlockInfo(block.Body.LastBlockId);
+            if (last == null)
+            {
+                block.Body.Height = 0;
+            }
+            else
+            {
+                block.Body.Height = last.Height + 1;
+            }
+
+            var cmd = BlockInfo.FromBlock(block).GetInsertCommand();
+            cmd.Connection = _blockInfoDb;
+            cmd.ExecuteNonQuery();
         }
 
         public void SaveBlock(Block block)
@@ -251,6 +269,7 @@ namespace MemeIum.Services.Blockchain
             {
                 File.WriteAllText(fileName,JsonConvert.SerializeObject(block));
             }
+            SaveToDb(block);
         }
 
         public bool WantedTransaction(InvitationRequest transInvitationRequest)
@@ -266,6 +285,11 @@ namespace MemeIum.Services.Blockchain
                     }
                 }
                 atB = LookUpBlock(atB.Body.LastBlockId);
+            }
+
+            if (_minerService.HasTransactionInMemPool(transInvitationRequest.DataId))
+            {
+                return false;
             }
             return true;
         }
