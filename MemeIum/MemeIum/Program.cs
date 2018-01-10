@@ -72,7 +72,7 @@ namespace MemeIum
             //mck.GenerateRandomWallets(100);
             //mck.CreateGenesis();
             //mck.FirstTarget();
-
+            //mck.TestBigger();
         }
     }
 }

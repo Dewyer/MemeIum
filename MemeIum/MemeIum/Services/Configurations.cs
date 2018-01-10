@@ -22,7 +22,7 @@ namespace MemeIum.Services
         public const int BLOCK_REWARD = 420000;
         public const int CATCHUP_N = 5;
 
-        public const string GENESIS_BLOCK_ID = "8JeCq5DoFk2kuJMjSIAxQFnVdb2NSl11BUAtYujDzO8=";
+        public const string GENESIS_BLOCK_ID = "989BM5L4Z5pSYHKieb2oF94xbmN20eyUCWfPmNYwUn0=";
 
         static Configurations()
         {

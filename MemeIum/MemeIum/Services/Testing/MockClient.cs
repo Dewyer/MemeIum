@@ -74,13 +74,34 @@ namespace MemeIum.Services
 
         }
 
-        public void FirstTarget()
+        public void TestBigger()
         {
-            var max = BigInteger.Pow(2, 256);
-            var target = max*153;
-            target /= 1000000;
-            var b64 = Convert.ToBase64String(target.ToByteArray());
 
+            var v1 = "YtNKIZBLHHkgskgT7wBPWriswmaAC7Jl+boM/+kGCg==";
+            var v2 = "OWgcsK3mdY5DjNWsoegYyq7W4C/+pgcIrb4dIrulAQA=";
+            var bh1 = Convert.FromBase64String(v1);
+            var bh2 = Convert.FromBase64String(v2);
+            var bg1 = new BigInteger(bh1);
+            if (bg1 < 0)
+            {
+                bg1 *= -1;
+            }
+            var bg2 = new BigInteger(bh2);
+            if (bg2 < 0)
+            {
+                bg2 *= -1;
+            }
+
+            Console.WriteLine(bg2 < bg1);
+        }
+
+        public string FirstTarget()
+        {
+            var max = BigInteger.Pow(2, 251) -1;
+            var target = max* 1599;
+            target /= 62500000;
+            var b64 = Convert.ToBase64String(target.ToByteArray());
+            return b64;
             Console.WriteLine(b64);
         }
 
@@ -126,7 +147,7 @@ namespace MemeIum.Services
                 LastBlockId = "0",
                 MinerVOut = miner.GetMinerVOut(tx,0),
                 Nounce = "42",
-                Target = "nSy13m+044bfTbfsEP+wpUdTPZl/9E2aBkXzABb59f8A",
+                Target = FirstTarget(),
                 Tx=tx
                 
             };
@@ -140,6 +161,7 @@ namespace MemeIum.Services
 
             bb.SaveBlock(genesis);
             Console.WriteLine("done");
+            Console.WriteLine(genesis.Body.Id);
 
         }
     }
