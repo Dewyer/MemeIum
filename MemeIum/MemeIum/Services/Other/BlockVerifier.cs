@@ -33,6 +33,11 @@ namespace MemeIum.Services.Other
                 return false;
             }
 
+            if (!block.IsLegal())
+            {
+                return false;
+            }
+
             if (!VerifyHash(block))
             {
                 return false;
@@ -104,6 +109,7 @@ namespace MemeIum.Services.Other
             block.Body.Id = oldH;
             return suc;
         }
+
     }
 }
 

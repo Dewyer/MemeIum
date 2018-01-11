@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -7,6 +9,7 @@ using System.Text;
 using MemeIum.Misc;
 using MemeIum.Misc.Transaction;
 using MemeIum.Requests;
+using Newtonsoft.Json;
 
 namespace MemeIum.Services
 {
@@ -15,8 +18,10 @@ namespace MemeIum.Services
         private IP2PServer _server;
         private ILogger Logger;
     
-        public List<Peer> Peers { get; set; }
+        public ObservableCollection<Peer> Peers { get; set; }
         public List<RequestForPeers> ActiveRequestForPeers;
+        private string _peersFullPath;
+        private string _originsFullPath;
 
         public Peer ThisPeer;
 
@@ -24,17 +29,43 @@ namespace MemeIum.Services
         {
             string externalip = new WebClient().DownloadString("http://icanhazip.com");
 
-            Peers = new List<Peer>();
+            _peersFullPath = Configurations.CurrentPath+"\\BlockChain\\Data\\Peers.json";
+            _originsFullPath = Configurations.CurrentPath + "\\BlockChain\\Data\\Origins.json";
+
             ThisPeer = new Peer(){Address = externalip,Port=Configurations.Config.MainPort};
             ActiveRequestForPeers = new List<RequestForPeers>();
 
             _server = Services.GetService<IP2PServer>();
             Logger = Services.GetService<ILogger>();
 
+            TryLoadPeers();
+            Peers.CollectionChanged += Peers_CollectionChanged;
+
+        }
+
+        private void Peers_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            File.WriteAllText(_peersFullPath,JsonConvert.SerializeObject(Peers));
+        }
+
+        public void TryLoadPeers()
+        {
+            if (File.Exists(_peersFullPath))
+            {
+                Peers = JsonConvert.DeserializeObject<ObservableCollection<Peer>>(File.ReadAllText(_peersFullPath));
+            }
+            else
+            {
+                Peers = new ObservableCollection<Peer>();
+                
+                var origins = JsonConvert.DeserializeObject<List<Peer>>(File.ReadAllText(_originsFullPath));
+                InitiateSweap(origins);
+            }
         }
 
         public void InitiateSweap(List<Peer> originPeers)
         {
+            Logger.Log("New Peer sweep",2);
             var request = new GetAddressesRequest();
             request.MaxPeers = Configurations.Config.MaxPeersGiven;
 
@@ -48,7 +79,7 @@ namespace MemeIum.Services
 
         public void AddPeerToMe(Peer toadd)
         {
-            if (Peers.FindAll(rr => rr.Equals(toadd)).Count == 0 && !ThisPeer.Equals(toadd))
+            if (Peers.ToList().FindAll(rr => rr.Equals(toadd)).Count == 0 && !ThisPeer.Equals(toadd))
             {
                 Peers.Add(toadd);
                 Logger.Log($"New peer: {toadd.ToString()}");

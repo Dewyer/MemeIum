@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using MemeIum.Misc.UI;
 using MemeIum.Services.Mineing;
 using MemeIum.Services.Other;
@@ -114,7 +116,14 @@ namespace MemeIum.Services.UI
                     ToAddress = to,
 
                 };
+                var selfVout = new TransactionVOut()
+                {
+                    Amount = balanceRips-amountInRips,
+                    FromAddress = _walletService.Address,
+                    ToAddress = _walletService.Address
+                };
                 TransactionVOut.SetUniqueIdForVOut(vout);
+                TransactionVOut.SetUniqueIdForVOut(selfVout);
 
                 var body = new TransactionBody()
                 {
@@ -122,7 +131,7 @@ namespace MemeIum.Services.UI
                     Message = msg,
                     PubKey = _walletService.PubKey,
                     VInputs = inps,
-                    VOuts = new List<InBlockTransactionVOut> { vout.GetInBlockTransactionVOut() }
+                    VOuts = new List<InBlockTransactionVOut> { vout.GetInBlockTransactionVOut(),selfVout.GetInBlockTransactionVOut() }
                 };
                 TransactionBody.SetUniqueIdForBody(body);
                 var trans = _walletService.MakeTransaction(body);
@@ -149,7 +158,8 @@ namespace MemeIum.Services.UI
                 }
                 else if (tokens[0] == "sendtshort" && tokens.Length == 4)
                 {
-                    var am = float.Parse(tokens[3]);
+
+                    var am = float.Parse(tokens[3],new CultureInfo("en-US"));
                     SendTShort(tokens[1], am,tokens[2]);
                 }
                 else if (cmdBody == "help")
@@ -159,6 +169,10 @@ namespace MemeIum.Services.UI
                 else if (cmdBody == "b")
                 {
                     break;
+                }
+                else
+                {
+                    _logger.Log(GetIndentTabs() + "Invalid command, for help type 'help'.", displayInfo: false);
                 }
             }
 

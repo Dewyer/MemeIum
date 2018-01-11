@@ -106,7 +106,7 @@ namespace MemeIum.Services.Mineing
             var inp = t.Body.VInputs.Sum(r => _transactionVerifier.GetUnspeTransactionVOut(r.OutputId,out bool spent).Amount);
             var outp = t.Body.VOuts.Sum(r => r.Amount);
             if (inp - outp >= 0) {
-                return 0;
+                return inp - outp;
             } 
             return 0;
         }
@@ -189,7 +189,12 @@ namespace MemeIum.Services.Mineing
                     lastTime = DateTime.UtcNow;
                 }
             }
-            Console.WriteLine("Miner finished");
+            Console.WriteLine("[MinerInfo]Miner finished");
+            foreach (var transaction in choosenTxs)
+            {
+                MemPool.Remove(transaction);
+            }
+
             _eventManager.PassNewTrigger(block,EventTypes.EventType.NewBlock);
         }
 

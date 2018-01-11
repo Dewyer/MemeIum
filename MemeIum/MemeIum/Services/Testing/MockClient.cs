@@ -21,10 +21,12 @@ namespace MemeIum.Services
     class MockClient
     {
         private ILogger Logger;
+        private IMappingService maper;
 
         public MockClient()
         {
             Logger = Services.GetService<ILogger>();
+            maper = Services.GetService<IMappingService>();
         }
 
         public void MockTestMapp()
@@ -93,6 +95,20 @@ namespace MemeIum.Services
             }
 
             Console.WriteLine(bg2 < bg1);
+        }
+
+        public void CreateNewOrigins()
+        {
+            var _originsFullPath = Configurations.CurrentPath + "\\BlockChain\\Data\\Origins.json";
+            var origins = new List<Peer>()
+            {
+                new Peer()
+                {
+                    Address = "80.98.99.40",
+                    Port = 4242
+                }
+            };
+            File.WriteAllText(_originsFullPath,JsonConvert.SerializeObject(origins));
         }
 
         public string FirstTarget()

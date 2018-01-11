@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Net;
 using System.Text;
 using MemeIum.Misc;
@@ -13,6 +14,6 @@ namespace MemeIum.Services
         void ParseGetAddressesRequest(GetAddressesRequest request,Peer source);
         void ParseAddressesRequest(AddressesRequest request, Peer source);
         void Broadcast(object data);
-        List<Peer> Peers { get; set; }
+        ObservableCollection<Peer> Peers { get; set; }
     }
 }

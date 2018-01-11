@@ -21,8 +21,9 @@ namespace MemeIum.Services
         public const int TRANSACTION_WANT_LIMIT = 20;
         public const int BLOCK_REWARD = 420000;
         public const int CATCHUP_N = 5;
+        public const int MAX_STR_LEN = 50;
 
-        public const string GENESIS_BLOCK_ID = "989BM5L4Z5pSYHKieb2oF94xbmN20eyUCWfPmNYwUn0=";
+        public const string GENESIS_BLOCK_ID = "sCOL48pO0Gbwo2sqqRe7nIoRrHIRBdAZILaIxarHBKA=";
 
         static Configurations()
         {

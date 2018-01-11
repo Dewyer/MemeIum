@@ -100,7 +100,7 @@ namespace MemeIum.Services.Other
         public List<TransactionVOut> GetAllTransactionVOutsForAddress(string addr)
         {
             var cmd = _unspentConnection.CreateCommand();
-            cmd.CommandText = "SELECT * FROM unspent WHERE toaddr=$to";
+            cmd.CommandText = "SELECT * FROM unspent WHERE toaddr=$to AND spent='0';";
             cmd.Parameters.AddWithValue("to", addr);
             var reader = cmd.ExecuteReader();
             var ts = new List<TransactionVOut>();
@@ -228,6 +228,11 @@ namespace MemeIum.Services.Other
                 return false;
             }
 
+            if (!LegalityCheck(transaction))
+            {
+                return false;
+            }
+
             if (!VerifySignature(transaction))
             {
                 return false;
@@ -252,6 +257,56 @@ namespace MemeIum.Services.Other
                 return false;
             }
 
+            return true;
+        }
+
+        public bool LegalityCheck(Transaction transaction)
+        {
+            if (transaction.Body != null)
+            {
+                if (transaction.Body.VInputs == null || transaction.Body.VOuts == null)
+                {
+                    return false;
+                }
+
+                if (transaction.Body.VOuts.Count == 0 || transaction.Body.VInputs.Count == 0)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+
+            foreach (var transactionVIn in transaction.Body.VInputs)
+            {
+                if (!transactionVIn.IsLegal())
+                {
+                    return false;
+                }
+            }
+
+            foreach (var vout in transaction.Body.VOuts)
+            {
+                if (!vout.IsLegal())
+                {
+                    return false;
+                }
+            }
+
+            var others = new List<string>(){transaction.Body.TransactionId, transaction.Body.FromAddress};
+
+            foreach (var other in others)
+            {
+                if (string.IsNullOrEmpty(other) || other.Length>=Configurations.MAX_STR_LEN)
+                {
+                    return false;
+                }
+            }
+
+            if (string.IsNullOrEmpty(transaction.Body.PubKey))
+                return false;
 
             return true;
         }
@@ -275,6 +330,7 @@ namespace MemeIum.Services.Other
         {
 
             bool spent;
+
             vout = GetUnspeTransactionVOut(vin.OutputId,out spent);
             if (vout == null)
             {
