@@ -57,6 +57,7 @@ namespace MemeIum.Services
                 var client = new HttpClient();
                 var myurl = _trackerSignUp + "ip=" + ThisPeer.Address + "|" + ThisPeer.Port;
                 var resp = await client.GetStringAsync(new Uri(myurl));
+                Logger.Log($"Signup : {resp}", show: false, saveInfo: true);
             }
             catch (Exception e)
             {
@@ -86,7 +87,7 @@ namespace MemeIum.Services
                 var oldPeers = new List<Peer>();
                 oldPeers.AddRange(Peers);
                 Peers.Clear();
-
+                Logger.Log($"New track : {resp}",show:false,saveInfo:true);
                 if (peers.Count != 0)
                 {
                     foreach (var peer in peers)

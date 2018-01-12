@@ -9,7 +9,7 @@ namespace MemeIum.Services
         string LogPath { get; set; }
         int MinLogLevelToSave { get; set; }
         int MinLogLevelToDisplay { get; set; }
-        void Log(string msg, int level = 0,bool displayInfo = true);
+        void Log(string msg, int level = 0,bool displayInfo = true, bool saveInfo = true,bool show = true);
         void LogPartialLine(string msg, int level = 0, bool displayInfo = true);
         string LogReadLine();
     }

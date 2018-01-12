@@ -36,7 +36,7 @@ namespace MemeIum.Services
             File.AppendAllText(LogPath,$"Created : {DateTime.Now.ToString("F")}\n");
         }
 
-        public void Log(string msg, int level = 0,bool displayInfo = true)
+        public void Log(string msg, int level = 0,bool displayInfo = true,bool saveInfo = true,bool show = true)
         {
             if (level < 0 || level >= LevelPrefixes.Count)
             {
@@ -58,11 +58,11 @@ namespace MemeIum.Services
 
             InLine = false;
             LastLine = "";
-            if (MinLogLevelToDisplay <= level)
+            if (MinLogLevelToDisplay <= level && show)
             {
                 Console.WriteLine(log);
             }
-            if (MinLogLevelToSave <= level)
+            if (MinLogLevelToSave <= level ||saveInfo)
             {
                 File.AppendAllText(LogPath,$"{DateTime.Now.ToString("F")}//{log}\n");
             }

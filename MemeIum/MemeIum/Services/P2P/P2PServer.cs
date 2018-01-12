@@ -61,7 +61,7 @@ namespace MemeIum.Services
         private void ParseRequest(string request,Peer source)
         {
             var header = JsonConvert.DeserializeObject<RequestHeader>(request);
-            Logger.Log(String.Format("V:{0},T:{1}",header.Version,header.Type));
+            Logger.Log(String.Format("V:{0},T:{1},D:{2}",header.Version,header.Type,request),show:false);
 
             var mapper = Services.GetService<IMappingService>();
 
