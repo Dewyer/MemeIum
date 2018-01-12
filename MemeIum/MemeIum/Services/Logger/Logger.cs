@@ -12,6 +12,8 @@ namespace MemeIum.Services
         public string LogPath { get; set; }
         public int MinLogLevelToSave { get; set; }
         public int MinLogLevelToDisplay { get; set; }
+        public bool InLine = false;
+        public string LastLine = "";
 
         private List<string> LevelPrefixes = new List<string>(){"Info","Warning","Error"};
 
@@ -49,7 +51,13 @@ namespace MemeIum.Services
             {
                 log = msg;
             }
+            if (InLine)
+            {
+                log = "\n" + log;
+            }
 
+            InLine = false;
+            LastLine = "";
             if (MinLogLevelToDisplay <= level)
             {
                 Console.WriteLine(log);
@@ -75,6 +83,8 @@ namespace MemeIum.Services
             {
                 log = msg;
             }
+            InLine = true;
+            LastLine = log;
 
             if (MinLogLevelToDisplay <= level)
             {
@@ -89,6 +99,7 @@ namespace MemeIum.Services
 
         public string LogReadLine()
         {
+            InLine = true;
             var cc = Console.ReadLine();
             File.AppendAllText(LogPath, $"{DateTime.Now.ToString("F")}//{cc}\n");
             return cc;

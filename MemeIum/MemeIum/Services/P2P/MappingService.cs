@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
 using MemeIum.Misc;
@@ -24,23 +25,70 @@ namespace MemeIum.Services
         private string _originsFullPath;
 
         public Peer ThisPeer;
+        private string _trackerIp = "http://memeiumtracker.azurewebsites.net/track";
+        private string _trackerSignUp = "http://memeiumtracker.azurewebsites.net/track/set?";
+        private string externalIp;
 
         public void Init()
         {
-            string externalip = new WebClient().DownloadString("http://icanhazip.com");
+            externalIp = new WebClient().DownloadString("http://icanhazip.com").Split('\n')[0];
 
             _peersFullPath = Configurations.CurrentPath+"\\BlockChain\\Data\\Peers.json";
             _originsFullPath = Configurations.CurrentPath + "\\BlockChain\\Data\\Origins.json";
 
-            ThisPeer = new Peer(){Address = externalip,Port=Configurations.Config.MainPort};
+            ThisPeer = new Peer(){Address = externalIp, Port=Configurations.Config.MainPort};
             ActiveRequestForPeers = new List<RequestForPeers>();
 
             _server = Services.GetService<IP2PServer>();
             Logger = Services.GetService<ILogger>();
 
             TryLoadPeers();
+            TryTracker();
             Peers.CollectionChanged += Peers_CollectionChanged;
 
+        }
+
+        private async void TrySignUpToTracker()
+        {
+            try
+            {
+                var client = new HttpClient();
+                var myurl = _trackerSignUp + "ip=" + ThisPeer.Address + ":" + ThisPeer.Port;
+                var resp = await client.GetStringAsync(new Uri(myurl));
+            }
+            catch (Exception e)
+            {
+                Logger.Log("Can't sign up for tracker.", 2);
+            }
+
+        }
+
+        private async void TryTracker()
+        {
+            TrySignUpToTracker();
+            try
+            {
+                var client = new HttpClient();
+                var resp = await client.GetStringAsync(new Uri(_trackerIp));
+
+                var peers = JsonConvert.DeserializeObject<List<Peer>>(resp);
+                Logger.Log("Geting peers from tracker ..");
+                if (peers.Count != 0)
+                {
+                    Peers.Clear();
+                    foreach (var peer in peers)
+                    {
+                        if (peer.Address != ThisPeer.Address && peer.Port != ThisPeer.Port)
+                        {
+                            Peers.Add(peer);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Log("Tracker is not reachable",2);
+            }
         }
 
         private void Peers_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -129,6 +177,8 @@ namespace MemeIum.Services
 
         public void Broadcast(object data)
         {
+            TrySignUpToTracker();
+
             var invit = new InvitationRequest();
             if (data.GetType() == typeof(Transaction))
             {
