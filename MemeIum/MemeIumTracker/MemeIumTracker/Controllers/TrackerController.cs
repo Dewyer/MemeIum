@@ -35,7 +35,7 @@ namespace MemeIumTracker.Controllers
         {
             var remoteIpAddress = Request.HttpContext.Connection.RemoteIpAddress;
 
-            if (remoteIpAddress.ToString() == ip.Split(':')[0] || remoteIpAddress.ToString() == "::1")
+            if (remoteIpAddress.ToString() == ip.Split('|')[0] || ip.ToList().Contains(':'))
             {
                 var suc = tracker.SignInPeer(ip);
                 if (!suc)

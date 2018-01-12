@@ -60,8 +60,8 @@ namespace MemeIumTracker.Services
         {
             var peer = new Peer()
             {
-                Address = ip.Split(':')[0],
-                Port = int.Parse(ip.Split(':')[1])
+                Address = ip.Split('|')[0],
+                Port = int.Parse(ip.Split('|')[1])
             };
             if (Times.ContainsKey(ip))
             {

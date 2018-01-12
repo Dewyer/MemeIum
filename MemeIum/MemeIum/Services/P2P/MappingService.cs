@@ -55,7 +55,7 @@ namespace MemeIum.Services
             try
             {
                 var client = new HttpClient();
-                var myurl = _trackerSignUp + "ip=" + ThisPeer.Address + ":" + ThisPeer.Port;
+                var myurl = _trackerSignUp + "ip=" + ThisPeer.Address + "|" + ThisPeer.Port;
                 var resp = await client.GetStringAsync(new Uri(myurl));
             }
             catch (Exception e)
