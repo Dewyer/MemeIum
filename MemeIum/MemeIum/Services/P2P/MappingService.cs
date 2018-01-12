@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 using MemeIum.Misc;
 using MemeIum.Misc.Transaction;
 using MemeIum.Requests;
@@ -43,7 +44,8 @@ namespace MemeIum.Services
             Logger = Services.GetService<ILogger>();
 
             TryLoadPeers();
-            TryTracker();
+            Task.Run(() => PeerUpdateLoop());
+
             Peers.CollectionChanged += Peers_CollectionChanged;
 
         }
@@ -63,22 +65,36 @@ namespace MemeIum.Services
 
         }
 
+        public void PeerUpdateLoop()
+        {
+            while (true)
+            {
+                TryTracker();
+                TrySignUpToTracker();
+                Task.Delay(2000).Wait();
+            }
+        }
+
         private async void TryTracker()
         {
-            TrySignUpToTracker();
             try
             {
                 var client = new HttpClient();
                 var resp = await client.GetStringAsync(new Uri(_trackerIp));
 
                 var peers = JsonConvert.DeserializeObject<List<Peer>>(resp);
-                Logger.Log("Geting peers from tracker ..");
+                var oldPeers = new List<Peer>();
+                oldPeers.AddRange(Peers);
+                Peers.Clear();
+
                 if (peers.Count != 0)
                 {
-                    Peers.Clear();
                     foreach (var peer in peers)
                     {
-                        if (peer.Address != ThisPeer.Address && peer.Port != ThisPeer.Port)
+                        var inalredy = oldPeers.ToList().FindAll(r => r.Address == peer.Address && r.Port == peer.Port)
+                                           .Count > 0;
+
+                        if (!inalredy&&(peer.Address != ThisPeer.Address || peer.Port != ThisPeer.Port))
                         {
                             Peers.Add(peer);
                         }

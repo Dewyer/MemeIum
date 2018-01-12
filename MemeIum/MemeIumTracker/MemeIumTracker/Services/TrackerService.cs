@@ -66,7 +66,6 @@ namespace MemeIumTracker.Services
             if (Times.ContainsKey(ip))
             {
                 Times[ip] = DateTime.UtcNow;
-                All.Add(peer);
             }
             else
             {
