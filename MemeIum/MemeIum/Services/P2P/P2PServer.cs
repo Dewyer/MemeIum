@@ -4,10 +4,12 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using MemeIum.Misc;
 using MemeIum.Requests;
 using MemeIum.Services.Blockchain;
 using MemeIum.Services.CatchUp;
+using MemeIum.Services.P2P;
 using Newtonsoft.Json;
 
 namespace MemeIum.Services
@@ -17,51 +19,27 @@ namespace MemeIum.Services
         public ILogger Logger;
         private IBlockChainService _blockChainService;
         private ICatchUpService _catchUpService;
-
-        private UdpClient socket;
+        private IMappingService _mappingService;
 
         public void Init()
         {
             Logger = Services.GetService<ILogger>();
             _blockChainService = Services.GetService<IBlockChainService>();
             _catchUpService = Services.GetService<ICatchUpService>();
+            _mappingService = Services.GetService<IMappingService>();
             Start();
         }
 
         public void Start()
         {
-            socket = new UdpClient(Configurations.Config.MainPort);
-
-            socket.BeginReceive(new AsyncCallback(OnUdpData), socket);
+            var server = new Server(this){Port = Configurations.Config.MainPort};
         }
 
-        void OnUdpData(IAsyncResult result)
-        {
-            socket = result.AsyncState as UdpClient;
-            IPEndPoint source = new IPEndPoint(0, 0);
-
-            byte[] message = socket.EndReceive(result, ref source);
-            var msgStr = Encoding.UTF8.GetString(message);
-            Logger.Log(String.Format("Msg: {0}, From : {1}", msgStr, source.Address.ToString()));
-            var sourcePeer = Peer.FromIPEndPoint(source);
-
-            try
-            {
-                ParseRequest(msgStr, sourcePeer);
-            }
-            catch (Exception e)
-            {
-                Logger.Log(String.Format("Caught While parsing: {0}",e.ToString()));
-            }
-            
-            socket.BeginReceive(new AsyncCallback(OnUdpData), socket);
-
-        }
-
-        private void ParseRequest(string request,Peer source)
+        public void ParseRequest(string request,Peer source)
         {
             var header = JsonConvert.DeserializeObject<RequestHeader>(request);
-            Logger.Log(String.Format("V:{0},T:{1},D:{2}",header.Version,header.Type,request),show:false);
+            Logger.Log(String.Format("V:{0},T:{1},D:{2}",header.Version,header.Type,request),show:true);
+            source.Port = header.Sender.Port;
 
             var mapper = Services.GetService<IMappingService>();
 
@@ -136,9 +114,16 @@ namespace MemeIum.Services
 
         public void SendResponse<T>(T response,Peer peer)
         {
-            var respString = JsonConvert.SerializeObject(response);
-            var bytes = Encoding.UTF8.GetBytes(respString);
-            socket.Send(bytes,bytes.Length,peer.ToEndPoint());
+            if (peer.Port == Configurations.Config.MainPort)
+            {
+                return;
+            }
+            var ep = peer.ToEndPoint();
+            var msg = JsonConvert.SerializeObject(response);
+            var bytes = Encoding.UTF8.GetBytes(msg);
+            var client = new UdpClient(ep.AddressFamily);
+
+            client.Send(bytes, bytes.Length,ep);
         }
     }
 }

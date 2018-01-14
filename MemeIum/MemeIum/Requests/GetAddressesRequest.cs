@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using MemeIum.Misc;
 using MemeIum.Services;
 
 namespace MemeIum.Requests
@@ -9,6 +10,7 @@ namespace MemeIum.Requests
     {
         public GetAddressesRequest()
         {
+            Sender = RequestHeader.Me;
             Version = Configurations.Config.Version;
             Type = RequestHeader.RequestIndexes[typeof(GetAddressesRequest)];
         }

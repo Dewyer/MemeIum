@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MemeIum.Services
 {
     class Logger : ILogger, IService
     {
-        
-
         public string LogPath { get; set; }
         public int MinLogLevelToSave { get; set; }
         public int MinLogLevelToDisplay { get; set; }
@@ -16,9 +16,13 @@ namespace MemeIum.Services
         public string LastLine = "";
 
         private List<string> LevelPrefixes = new List<string>(){"Info","Warning","Error"};
+        private List<string> ToLogQuee;
 
         public void Init()
         {
+            ToLogQuee = new List<string>();
+            Task.Run(() => SaverLoop());
+
             if (!Directory.Exists(Configurations.CurrentPath+"\\Logs"))
             {
                 Directory.CreateDirectory(Configurations.CurrentPath+"\\Logs");
@@ -34,6 +38,36 @@ namespace MemeIum.Services
             }
 
             File.AppendAllText(LogPath,$"Created : {DateTime.Now.ToString("F")}\n");
+        }
+
+        private void SaverLoop()
+        {
+            while (Configurations.MainThreadRunning)
+            {
+                if (ToLogQuee.Count > 0)
+                {
+                    try
+                    {
+                        var nowQuee = new List<string>();
+                        nowQuee.AddRange(ToLogQuee);
+                        foreach (var log in nowQuee)
+                        {
+                            File.AppendAllText(LogPath,$"{DateTime.Now.ToString("F")}//{log}");
+                            ToLogQuee.Remove(log);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }
+                Task.Delay(100).Wait();
+            }
+
+        }
+
+        private void AddToSaveQuee(string msg)
+        {
+            ToLogQuee.Add(msg);
         }
 
         public void Log(string msg, int level = 0,bool displayInfo = true,bool saveInfo = true,bool show = true)
@@ -64,7 +98,7 @@ namespace MemeIum.Services
             }
             if (MinLogLevelToSave <= level ||saveInfo)
             {
-                File.AppendAllText(LogPath,$"{DateTime.Now.ToString("F")}//{log}\n");
+                AddToSaveQuee(log);
             }
         }
 
@@ -92,7 +126,7 @@ namespace MemeIum.Services
             }
             if (MinLogLevelToSave <= level)
             {
-                File.AppendAllText(LogPath, $"{DateTime.Now.ToString("F")}//{log}");
+                AddToSaveQuee(log);
             }
 
         }
@@ -101,7 +135,7 @@ namespace MemeIum.Services
         {
             InLine = true;
             var cc = Console.ReadLine();
-            File.AppendAllText(LogPath, $"{DateTime.Now.ToString("F")}//{cc}\n");
+            AddToSaveQuee(cc);
             return cc;
         }
     }

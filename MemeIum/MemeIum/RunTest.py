@@ -22,7 +22,4 @@ def createEnv(forport,istest=False):
 
 createEnv(3232)
 createEnv(3233)
-time.sleep(1)
-createEnv(4242,True)
-time.sleep(1)
-createEnv(3234,True)
+

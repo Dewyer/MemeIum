@@ -24,6 +24,7 @@ namespace MemeIum.Services.Other
         private SQLiteConnection _unspentConnection;
         private IBlockChainService _blockChainService;
         private IMinerService _minerService;
+        private IMappingService _mappingService;
 
         public void Init()
         {
@@ -36,6 +37,7 @@ namespace MemeIum.Services.Other
 
             _blockChainService = Services.GetService<IBlockChainService>();
             _minerService = Services.GetService<IMinerService>();
+            _mappingService = Services.GetService<IMappingService>();
 
             TryConnectToUnspentDB();
 
@@ -145,10 +147,13 @@ namespace MemeIum.Services.Other
             {
                 _logger.Log($"New transaction {trans.Body.TransactionId}");
                 if (!_minerService.HasTransactionInMemPool(trans.Body.TransactionId))
+                {
                     _minerService.MemPool.Add(trans);
+                    _mappingService.Broadcast(trans);
+                }
                 else
                 {
-                    _logger.Log("Already had transaction received",1);
+                    _logger.Log("Already had transaction received", 1);
                 }
 
             }

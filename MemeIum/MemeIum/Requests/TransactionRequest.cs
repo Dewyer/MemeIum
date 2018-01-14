@@ -15,6 +15,7 @@ namespace MemeIum.Requests
 
         public TransactionRequest()
         {
+            Sender = RequestHeader.Me;
             Version = Configurations.Config.Version;
             Type = RequestHeader.RequestIndexes[typeof(TransactionRequest)];
         }

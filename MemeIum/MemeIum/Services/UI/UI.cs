@@ -12,6 +12,7 @@ using MemeIum.Services.Wallet;
 using Newtonsoft.Json;
 using MemeIum.Misc.Transaction;
 using MemeIum.Misc;
+using MemeIum.Requests;
 using MemeIum.Services.Eventmanagger;
 
 namespace MemeIum.Services.UI
@@ -24,6 +25,7 @@ namespace MemeIum.Services.UI
         private ITransactionVerifier _transactionVerifier;
         private IWalletService _walletService;
         private IEventManager _eventManager;
+        private IMappingService _mappingService;
 
         private int _indent;
         private int InIndent
@@ -47,6 +49,7 @@ namespace MemeIum.Services.UI
             _transactionVerifier = Services.GetService<ITransactionVerifier>();
             _walletService = Services.GetService<IWalletService>();
             _eventManager = Services.GetService<IEventManager>();
+            _mappingService = Services.GetService<IMappingService>();
 
             var textRes = $"{Configurations.CurrentPath}\\TextResources.json";
             res = JsonConvert.DeserializeObject<TextResources>(File.ReadAllText(textRes));
@@ -179,6 +182,56 @@ namespace MemeIum.Services.UI
             InIndent--;
         }
 
+        public void Pings()
+        {
+            var obj = new RequestHeader()
+            {
+                Version = Configurations.Config.Version,
+                Type = -1,
+                Sender = RequestHeader.Me
+            };
+            foreach (var peer in _mappingService.Peers)
+            {
+                Console.WriteLine($"Pinged : {peer.Address}|{peer.Port}");
+                _server.SendResponse(obj,peer);
+            }
+        }
+
+        public void AddIp(string[] tokens)
+        {
+            if (tokens.Length == 3)
+            {
+                try
+                {
+                    var addr = tokens[1];
+                    var port = int.Parse(tokens[2]);
+                    var peer = new Peer()
+                    {
+                        Address = addr,
+                        Port = port
+                    };
+                    _mappingService.Peers.Add(peer);
+                }
+                catch
+                {
+                    _logger.Log("Could not add ip..",displayInfo:false);
+                }
+            }
+        }
+
+        public void ShowPeers()
+        {
+            _logger.Log(res.Separator, displayInfo: false);
+            _logger.Log("You'r peers :", displayInfo: false);
+            foreach (var peer in _mappingService.Peers)
+            {
+                _logger.Log($"Address : {peer.Address} , Port : {peer.Port}", displayInfo: false);
+            }
+
+            _logger.Log(res.Separator, displayInfo: false);
+
+        }
+
         public void StartMainLoop()
         {
             _logger.Log("Starting Console UI...");
@@ -200,6 +253,18 @@ namespace MemeIum.Services.UI
                 else if (cmdBody.StartsWith("wallet"))
                 {
                     StartWalletLoop();
+                }
+                else if (cmdBody.StartsWith("pings"))
+                {
+                    Pings();
+                }
+                else if (cmdBody.StartsWith("addip"))
+                {
+                    AddIp(cmdTokens);
+                }
+                else if (cmdBody.StartsWith("showp"))
+                {
+                    ShowPeers();
                 }
                 else if (cmdBody == "q" || cmdBody == "quit")
                 {

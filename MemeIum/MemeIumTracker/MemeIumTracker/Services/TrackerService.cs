@@ -12,7 +12,7 @@ namespace MemeIumTracker.Services
     public interface ITrackerService
     {
         List<Peer> GetAllPeers();
-        bool SignInPeer(string ip);
+        bool SignInPeer(string ip,int port);
     }
 
     public class Peer
@@ -38,6 +38,11 @@ namespace MemeIumTracker.Services
             lastUp = new DateTime().AddTicks(long.Parse(reader["lastrespticks"].ToString()));
             return pp;
         }
+
+        public override string ToString()
+        {
+            return this.Address + "|" + this.Port;
+        }
     }
 
     public class InMemo : ITrackerService
@@ -53,29 +58,42 @@ namespace MemeIumTracker.Services
 
         public List<Peer> GetAllPeers()
         {
+            var stay = new List<Peer>();
+            foreach (var peer in All)
+            {
+                if ((DateTime.UtcNow - Times[peer.ToString()]).TotalMinutes <= 2)
+                {
+                    stay.Add(peer);
+                }
+            }
+            All = stay;
             return All;
         }
 
-        public bool SignInPeer(string ip)
+        public bool SignInPeer(string ip,int port)
         {
             var peer = new Peer()
             {
-                Address = ip.Split('|')[0],
-                Port = int.Parse(ip.Split('|')[1])
+                Address = ip,
+                Port = port
             };
-            if (Times.ContainsKey(ip))
+            if (Times.ContainsKey(peer.ToString()))
             {
-                Times[ip] = DateTime.UtcNow;
+                Times[peer.ToString()] = DateTime.UtcNow;
             }
             else
             {
                 All.Add(peer);
-                Times.Add(ip,DateTime.UtcNow);
+                Times.Add(peer.ToString(),DateTime.UtcNow);
             }
 
-            if ((DateTime.UtcNow - Times[ip]).TotalMinutes <= 20)
+            if ((DateTime.UtcNow - Times[peer.ToString()]).TotalMinutes <= 2)
             {
                 return true;
+            }
+            else
+            {
+                Times.Remove(peer.ToString());
             }
             return false;
         }
@@ -143,7 +161,7 @@ namespace MemeIumTracker.Services
 
         }
 
-        public bool SignInPeer(string ip)
+        public bool SignInPeer(string ip,int port)
         {
             try
             {

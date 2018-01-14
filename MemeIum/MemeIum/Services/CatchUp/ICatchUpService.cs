@@ -9,6 +9,7 @@ namespace MemeIum.Services.CatchUp
 {
     interface ICatchUpService
     {
+        void StartCatchup();
         bool CaughtUp { get; }
         Thread Checker { get; set; }
         void ParseCatcherUpRequest(CatcherUpRequest request,Peer from);

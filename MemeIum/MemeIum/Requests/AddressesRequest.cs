@@ -10,6 +10,7 @@ namespace MemeIum.Requests
     {
         public AddressesRequest()
         {
+            Sender = RequestHeader.Me;
             Version = Configurations.Config.Version;
             Type = RequestHeader.RequestIndexes[typeof(AddressesRequest)];
         }

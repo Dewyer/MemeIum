@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using MemeIum.Misc;
 using MemeIum.Misc.Transaction;
 using MemeIum.Requests;
+using MemeIum.Services.CatchUp;
 using Newtonsoft.Json;
 
 namespace MemeIum.Services
@@ -19,7 +20,8 @@ namespace MemeIum.Services
     {
         private IP2PServer _server;
         private ILogger Logger;
-    
+        private ICatchUpService _catcherUp;
+
         public ObservableCollection<Peer> Peers { get; set; }
         public List<RequestForPeers> ActiveRequestForPeers;
         private string _peersFullPath;
@@ -38,10 +40,15 @@ namespace MemeIum.Services
             _originsFullPath = Configurations.CurrentPath + "\\BlockChain\\Data\\Origins.json";
 
             ThisPeer = new Peer(){Address = externalIp, Port=Configurations.Config.MainPort};
+            RequestHeader.Me = ThisPeer;
+
             ActiveRequestForPeers = new List<RequestForPeers>();
 
             _server = Services.GetService<IP2PServer>();
+            _catcherUp = Services.GetService<ICatchUpService>();
+
             Logger = Services.GetService<ILogger>();
+
 
             TryLoadPeers();
             Task.Run(() => PeerUpdateLoop());
@@ -68,11 +75,17 @@ namespace MemeIum.Services
 
         public void PeerUpdateLoop()
         {
+            var first = true;
             while (true)
             {
                 TryTracker();
                 TrySignUpToTracker();
+                if (first)
+                {
+                    _catcherUp.StartCatchup();
+                }
                 Task.Delay(2000).Wait();
+                first = false;
             }
         }
 
@@ -86,7 +99,6 @@ namespace MemeIum.Services
                 var peers = JsonConvert.DeserializeObject<List<Peer>>(resp);
                 var oldPeers = new List<Peer>();
                 oldPeers.AddRange(Peers);
-                Peers.Clear();
                 Logger.Log($"New track : {resp}",show:false,saveInfo:true);
                 if (peers.Count != 0)
                 {
@@ -110,7 +122,7 @@ namespace MemeIum.Services
 
         private void Peers_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            File.WriteAllText(_peersFullPath,JsonConvert.SerializeObject(Peers));
+            //File.WriteAllText(_peersFullPath,JsonConvert.SerializeObject(Peers));
         }
 
         public void TryLoadPeers()

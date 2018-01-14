@@ -1,10 +1,12 @@
 ﻿{
-  "Version": "dev", 
+  "Version": "dev",
   "MainPort": 4242,
   "MaxPeersGiven": 100,
   "MaxPeersHave": 10000,
-  "SecondsToWaitForAddresses": 20, 
-
+  "SecondsToWaitForAddresses": 20,
+  "ShouldMine": true,
+  "MaxThreadsToMineOn": 1,
+  "SecondsToWaitBetweenCatchUpLoops": 60,
   "MinLogLevelToSave": 0,
   "MinLogLevelToDisplay": 0
 }

@@ -31,6 +31,7 @@ namespace MemeIum.Services.CatchUp
         private List<BlockInfo> bufferedBlockInfos;
         private bool shouldTryEnd;
         private string supposedLongestBlockId;
+        private DateTime LastGotResponse;
 
         public void Init()
         {
@@ -39,6 +40,7 @@ namespace MemeIum.Services.CatchUp
             _server = Services.GetService<IP2PServer>();
             _minerService = Services.GetService<IMinerService>();
             _eventManager = Services.GetService<IEventManager>();
+            _blockChainService = Services.GetService<IBlockChainService>();
 
             _catchDataFullPath = $"{Configurations.CurrentPath}\\BlockChain\\Catchup";
             _logger.Log("Ketchup started to flow ....",1);
@@ -47,12 +49,16 @@ namespace MemeIum.Services.CatchUp
             bufferedBlockInfos = new List<BlockInfo>();
             supposedLongestBlockId = "";
             shouldTryEnd = false;
+            LastGotResponse = DateTime.UtcNow;
 
             if (!Directory.Exists(_catchDataFullPath))
             {
                 Directory.CreateDirectory(_catchDataFullPath);
             }
+        }
 
+        public void StartCatchup()
+        {
             if (_mappingService.Peers.Count == 0)
             {
                 CaughtUp = true;
@@ -60,6 +66,7 @@ namespace MemeIum.Services.CatchUp
             }
 
             Checker = new Thread(new ThreadStart(CheckUpChecker));
+            Checker.Start();
         }
 
         private bool IsBlockBuffered(string id)
@@ -130,6 +137,8 @@ namespace MemeIum.Services.CatchUp
 
         public void ParseCatchUpData(object data)
         {
+            LastGotResponse = DateTime.UtcNow;
+            
             if (data.GetType() == typeof(TransactionRequest))
             {
                 var trans = (TransactionRequest)data;
@@ -200,7 +209,6 @@ namespace MemeIum.Services.CatchUp
 
         public void CheckUpChecker()
         {
-            var rng = new Random();
             while (!CaughtUp)
             {
                 var req = new DidICatchUpRequest()
@@ -209,9 +217,16 @@ namespace MemeIum.Services.CatchUp
                     LastOnline =  _blockChainService.Info.EditTime.AddMilliseconds(1)
                 };
                 _mappingService.Peers.Shuffle();
-                for (int ii = 0; ii < Configurations.CATCHUP_N;ii++)
+                for (int ii = 0; ii < (_mappingService.Peers.Count >= Configurations.CATCHUP_N ? Configurations.CATCHUP_N : _mappingService.Peers.Count);ii++)
                 {
                     _server.SendResponse(req,_mappingService.Peers[ii]);
+                }
+
+                if ((DateTime.UtcNow - LastGotResponse).TotalSeconds >= Configurations.MAX_TIME_BETWEEN_CATCHUP_RESP)
+                {
+                    CaughtUp = true;
+                    _logger.Log("Ketchup timed out, ketchup.");
+                    break;
                 }
 
                 Thread.Sleep(1000*Configurations.Config.SecondsToWaitBetweenCatchUpLoops);

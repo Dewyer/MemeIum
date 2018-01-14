@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Net.Mime;
 using System.Reflection;
+using System.Threading;
 using MemeIum.Services;
 using MemeIum.Services.Blockchain;
 using MemeIum.Services.CatchUp;
@@ -28,7 +30,7 @@ namespace MemeIum
                 if (int.TryParse(args[0], out port))
                 {
                     Configurations.Config.MainPort = port;
-                    Logger.Log($"Changed port: {port}");
+                    Console.WriteLine($"Changed port {port}");
 
                 }
 
@@ -45,6 +47,7 @@ namespace MemeIum
 
         static void Main(string[] args)
         {
+            Configurations.MainThreadRunning = true;
 
             LoadCommandLineArgs(args);
             Services.Services.RegisterSingeleton<ILogger,Logger>();
@@ -66,13 +69,13 @@ namespace MemeIum
             var Logger = Services.Services.GetService<ILogger>();
             Logger.MinLogLevelToSave = Configurations.Config.MinLogLevelToSave;
             Logger.MinLogLevelToDisplay = Configurations.Config.MinLogLevelToDisplay;
-            Logger.Log("Starting up node...");
-
             var mck = new MockClient();
             //mck.GenerateRandomWallets(100);
             //mck.CreateGenesis();
             //mck.FirstTarget();
             //mck.CreateNewOrigins();
+            Configurations.MainThreadRunning = false;
+            Environment.Exit(0);
         }
     }
 }

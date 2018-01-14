@@ -12,6 +12,7 @@ namespace MemeIum.Services
     {
         public static Config Config { get; set; }
         public static string CurrentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+        public static bool MainThreadRunning { get; set; }
 
         public const int MAX_TRANSACTION_SIZE_BYTES = 3000;
         public const int MAX_BLOCK_SIZE_BYTES = 12601200;
@@ -22,6 +23,7 @@ namespace MemeIum.Services
         public const int BLOCK_REWARD = 420000;
         public const int CATCHUP_N = 5;
         public const int MAX_STR_LEN = 50;
+        public const float MAX_TIME_BETWEEN_CATCHUP_RESP = 10;
 
         public const string GENESIS_BLOCK_ID = "sCOL48pO0Gbwo2sqqRe7nIoRrHIRBdAZILaIxarHBKA=";
 

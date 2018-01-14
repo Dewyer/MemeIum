@@ -35,16 +35,12 @@ namespace MemeIumTracker.Controllers
         {
             var remoteIpAddress = Request.HttpContext.Connection.RemoteIpAddress;
 
-            if (remoteIpAddress.ToString() == ip.Split('|')[0] || ip.ToList().Contains(':'))
+            var suc = tracker.SignInPeer(remoteIpAddress.ToString(),int.Parse(ip.Split('|')[1]));
+            if (!suc)
             {
-                var suc = tracker.SignInPeer(ip);
-                if (!suc)
-                {
-                    return NotFound();
-                }
-                return Ok();
+                return NotFound();
             }
-            return new ObjectResult(new { succsess = false,ip=remoteIpAddress.ToString(),given=ip });
+            return Ok();
         }
 
     }

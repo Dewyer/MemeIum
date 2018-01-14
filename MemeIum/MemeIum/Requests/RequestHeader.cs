@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using MemeIum.Misc;
 
 namespace MemeIum.Requests
 {
     class RequestHeader
     {
         public static Dictionary<Type, int> RequestIndexes;
+        public static Peer Me { get; set; }
 
         static RequestHeader()
         {
@@ -26,6 +28,6 @@ namespace MemeIum.Requests
 
         public string Version { get; set; }
         public int Type { get; set; }
-        
+        public Peer Sender { get; set; }
     }
 }

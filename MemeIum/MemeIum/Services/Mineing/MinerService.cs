@@ -185,7 +185,7 @@ namespace MemeIum.Services.Mineing
                 tries++;
                 if (tries % 10000 == 0)
                 {
-                    Console.WriteLine("[MinerInfo]Hashing at - {0}/10KHs | Working on {1} rips of block",(DateTime.UtcNow-lastTime).TotalSeconds,totalRips.ToString());
+                    Console.WriteLine("[MinerInfo]Hashing at - {0}/KHs | Working on {1} rips of block",(DateTime.UtcNow-lastTime).TotalSeconds* 10000, totalRips.ToString());
                     lastTime = DateTime.UtcNow;
                 }
             }
