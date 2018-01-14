@@ -284,6 +284,10 @@ namespace MemeIum.Services.Blockchain
                         return false;
                     }
                 }
+                if (atB.Body.LastBlockId == "0")
+                {
+                    break;
+                }
                 atB = LookUpBlock(atB.Body.LastBlockId);
             }
 
@@ -319,7 +323,7 @@ namespace MemeIum.Services.Blockchain
             }
             else
             {
-                if (WantedTransaction(request))
+                if (WantedTransaction(request) && _minerService.MemPool.ToList().FindAll(r => r.Body.TransactionId == request.DataId).Count == 0)
                 {
                     took = true;
                 }
@@ -328,6 +332,7 @@ namespace MemeIum.Services.Blockchain
             if (took)
             {
                 _askedForRequests.Add(request);
+                _logger.Log($"Asked for data {request.DataId} ISBlock:{request.IsBlock}");
                 _server.SendResponse(req, from);
             }
         }
@@ -347,26 +352,28 @@ namespace MemeIum.Services.Blockchain
             if (request.IsBlock)
             {
                 var bb = LookUpBlock(request.WantedDataId);
-
+                _logger.Log($"Got new inv response : {request.WantedDataId}");
                 if (bb != null)
                 {
                     var req = new BlockRequest()
                     {
                         Block = bb
                     };
+                    _logger.Log($"Sending new inv response : {request.WantedDataId}");
                     _server.SendResponse(req, from);
                 }
             }
             else
             {
                 var tt = TryGetTransaction(request.WantedDataId);
+                _logger.Log($"Got new inv response : {request.WantedDataId}");
                 if (tt != null)
                 {
                     var req = new TransactionRequest()
                     {
                         Transaction = tt
                     };
-
+                    _logger.Log($"Sending new inv response : {request.WantedDataId}");
                     _server.SendResponse(req, from);
                 }
             }
@@ -377,17 +384,28 @@ namespace MemeIum.Services.Blockchain
             if (data.GetType() == typeof(TransactionRequest))
             {
                 var trans = (TransactionRequest) data;
+                _logger.Log($"Got new trans data : {trans.Transaction.Body.TransactionId}");
                 if (TryGetTransaction(trans.Transaction.Body.TransactionId) == null)
                 {
                     if (_transactionVerifier.Verify(trans.Transaction))
                     {
+                        _logger.Log($"Got new nice transaction");
                         _eventManager.PassNewTrigger(trans.Transaction, EventTypes.EventType.NewTransaction);
                     }
+                    else
+                    {
+                        _logger.Log("Got new ugly transaction.");
+                    }
+                }
+                else
+                {
+                    _logger.Log("Got new had transaction.");
                 }
             }
             else if (data.GetType() == typeof(BlockRequest))
             {
                 var block = (BlockRequest)data;
+                _logger.Log($"Got new block data : {block.Block.Body.Id}");
                 _eventManager.PassNewTrigger(block.Block,EventTypes.EventType.NewBlock);
             }
         }

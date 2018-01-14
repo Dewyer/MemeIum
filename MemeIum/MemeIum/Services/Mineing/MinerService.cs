@@ -183,9 +183,9 @@ namespace MemeIum.Services.Mineing
                 block.TimeOfCreation = DateTime.UtcNow;
                 Block.SetUniqueBlockId(block);
                 tries++;
-                if (tries % 10000 == 0)
+                if (tries % 100000 == 0)
                 {
-                    Console.WriteLine("[MinerInfo]Hashing at - {0}/KHs | Working on {1} rips of block",(DateTime.UtcNow-lastTime).TotalSeconds* 10000, totalRips.ToString());
+                    Console.WriteLine("[MinerInfo]Hashing at - {0}/Hs | Working on {1} rips of block",(DateTime.UtcNow-lastTime).TotalSeconds* 100000, totalRips.ToString());
                     lastTime = DateTime.UtcNow;
                 }
             }

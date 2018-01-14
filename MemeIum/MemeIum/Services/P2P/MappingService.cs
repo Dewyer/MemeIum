@@ -211,11 +211,15 @@ namespace MemeIum.Services
             var invit = new InvitationRequest();
             if (data.GetType() == typeof(Transaction))
             {
+                var tt = (Transaction) data;
                 invit.IsBlock = false;
+                invit.DataId = tt.Body.TransactionId;
             }
             else if (data.GetType() == typeof(Block))
             {
+                var bb = (Block) data;
                 invit.IsBlock = true;
+                invit.DataId = bb.Body.Id;
             }
             else
             {

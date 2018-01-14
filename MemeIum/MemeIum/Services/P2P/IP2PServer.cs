@@ -10,7 +10,7 @@ namespace MemeIum.Services
     interface IP2PServer
     {
         void Start();
-        void SendResponse<T>(T response,Peer to);
+        void SendResponse(object response,Peer to);
         void ParseRequest(string request, Peer source);
     }
 }

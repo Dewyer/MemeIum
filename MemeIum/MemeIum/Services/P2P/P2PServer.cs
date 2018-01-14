@@ -38,11 +38,11 @@ namespace MemeIum.Services
         public void ParseRequest(string request,Peer source)
         {
             var header = JsonConvert.DeserializeObject<RequestHeader>(request);
-            Logger.Log(String.Format("V:{0},T:{1},D:{2}",header.Version,header.Type,request),show:true);
+            //Logger.Log(String.Format("V:{0},T:{1},D:{2}",header.Version,header.Type,request),show:true);
             source.Port = header.Sender.Port;
+            Logger.Log($"Got {header.Type} {source.Port}");
 
             var mapper = Services.GetService<IMappingService>();
-
             if (header.Type == 0)
             {
                 var req = JsonConvert.DeserializeObject<GetAddressesRequest>(request);
@@ -74,10 +74,12 @@ namespace MemeIum.Services
                 var req = JsonConvert.DeserializeObject<TransactionRequest>(request);
                 if (_catchUpService.CaughtUp)
                 {
+                    Logger.Log("New data to pars");
                     _blockChainService.ParseDataRequest(req);
                 }
                 else
                 {
+                    Logger.Log("New data to kechup");
                     _catchUpService.ParseCatchUpData(req);
                 }
             }
@@ -112,18 +114,17 @@ namespace MemeIum.Services
 
         }
 
-        public void SendResponse<T>(T response,Peer peer)
+        public void SendResponse(object response,Peer peer)
         {
-            if (peer.Port == Configurations.Config.MainPort)
-            {
-                return;
-            }
             var ep = peer.ToEndPoint();
             var msg = JsonConvert.SerializeObject(response);
             var bytes = Encoding.UTF8.GetBytes(msg);
             var client = new UdpClient(ep.AddressFamily);
 
             client.Send(bytes, bytes.Length,ep);
+            var hd = (RequestHeader) response;
+
+            Logger.Log($"Sent : {hd.Type} | {peer.Address} {peer.Port}");
         }
     }
 }

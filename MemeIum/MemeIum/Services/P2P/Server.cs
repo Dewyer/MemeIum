@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using MemeIum.Misc;
 
 namespace MemeIum.Services.P2P
@@ -36,7 +37,8 @@ namespace MemeIum.Services.P2P
             {
                 var rr = client.Receive(ref ep);
                 var ss = Encoding.UTF8.GetString(rr);
-                _server.ParseRequest(ss,Peer.FromIPEndPoint(ep));
+                Task.Run(() => _server.ParseRequest(ss, Peer.FromIPEndPoint(ep)));
+
             }
             Console.WriteLine("[Server]Closing server..");
         }
