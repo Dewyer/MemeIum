@@ -87,6 +87,8 @@ namespace MemeIum.Services.Blockchain
             if (_blockVerifier.Verify(block))
             {
                 SaveBlock(block);
+                _logger.Log($"Got new verified block {block.Body.Id}");
+                _mappingService.Broadcast(block);
 
                 if (block.Body.LastBlockId == Info.EndOfLongestChain)
                 {
@@ -99,19 +101,30 @@ namespace MemeIum.Services.Blockchain
                 }
                 Info.EditTime = DateTime.UtcNow;
                 SaveLocalInfo();
+                CleanMemPool(block);
+                _minerService.TryRestartingWorkers();
                 _eventManager.PassNewTrigger(block,EventTypes.EventType.NewVerifiedBlock);
-                BroadCastVerifiedBlock(block);
             }
         }
 
-        private void BroadCastVerifiedBlock(Block block)
+        public void CleanMemPool(Block block)
         {
-            var req = new InvitationRequest()
+            var tsNotOn = new List<Transaction>();
+            foreach (var transaction in block.Body.Tx)
             {
-                DataId = block.Body.Id,
-                IsBlock = true
-            };
-            _mappingService.Broadcast(req);
+                if (_minerService.MemPool.ToList()
+                    .FindAll(r => r.Body.TransactionId == transaction.Body.TransactionId).Count == 0)
+                {
+                    Console.WriteLine("Found inside trans {0}",transaction.Body.TransactionId);
+                    tsNotOn.Add(transaction);
+                }
+            }
+
+            _minerService.MemPool.Clear();
+            foreach (var transaction in tsNotOn)
+            {
+                _minerService.MemPool.Add(transaction);
+            }
         }
 
         public void TryLoadSavedInfo()

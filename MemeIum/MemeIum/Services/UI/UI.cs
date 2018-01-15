@@ -210,7 +210,7 @@ namespace MemeIum.Services.UI
                         Address = addr,
                         Port = port
                     };
-                    _mappingService.Peers.Add(peer);
+                    _mappingService.RegisterPeer(peer);
                 }
                 catch
                 {

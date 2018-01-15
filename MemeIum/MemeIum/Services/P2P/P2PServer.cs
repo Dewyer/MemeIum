@@ -38,9 +38,10 @@ namespace MemeIum.Services
         public void ParseRequest(string request,Peer source)
         {
             var header = JsonConvert.DeserializeObject<RequestHeader>(request);
-            //Logger.Log(String.Format("V:{0},T:{1},D:{2}",header.Version,header.Type,request),show:true);
+            Logger.Log(String.Format("V:{0},T:{1},D:{2}",header.Version,header.Type,request),show:true);
             source.Port = header.Sender.Port;
             Logger.Log($"Got {header.Type} {source.Port}");
+            Logger.Log($"Ketc {_catchUpService.CaughtUp}");
 
             var mapper = Services.GetService<IMappingService>();
             if (header.Type == 0)
@@ -116,15 +117,21 @@ namespace MemeIum.Services
 
         public void SendResponse(object response,Peer peer)
         {
+            var hd = (RequestHeader)response;
+            if (peer.Port == Configurations.Config.MainPort)
+            {
+                Logger.Log("Bad port send");
+                return;
+            }
+            hd.Sender.Port = Configurations.Config.MainPort;
+            Logger.Log($"Sent : {hd.Type} | {peer.Address} {peer.Port} - from : {hd.Sender.Port}");
             var ep = peer.ToEndPoint();
             var msg = JsonConvert.SerializeObject(response);
             var bytes = Encoding.UTF8.GetBytes(msg);
             var client = new UdpClient(ep.AddressFamily);
 
             client.Send(bytes, bytes.Length,ep);
-            var hd = (RequestHeader) response;
-
-            Logger.Log($"Sent : {hd.Type} | {peer.Address} {peer.Port}");
+            
         }
     }
 }

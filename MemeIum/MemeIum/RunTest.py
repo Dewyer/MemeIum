@@ -20,6 +20,6 @@ def createEnv(forport,istest=False):
     shutil.copytree("./bin/Debug/netcoreapp2.0",at)
     os.popen("start dotnet "+str(at)+"/MemeIum.dll "+str(forport)+" "+shuf)
 
-createEnv(3232)
-createEnv(3233)
+createEnv(1232)
+createEnv(2233)
 

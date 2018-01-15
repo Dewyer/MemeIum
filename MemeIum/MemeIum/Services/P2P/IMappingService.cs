@@ -13,7 +13,8 @@ namespace MemeIum.Services
         void InitiateSweap(List<Peer> originPeers);
         void ParseGetAddressesRequest(GetAddressesRequest request,Peer source);
         void ParseAddressesRequest(AddressesRequest request, Peer source);
-        void Broadcast(object data);
+        void Broadcast<T>(T data);
         ObservableCollection<Peer> Peers { get; set; }
+        void RegisterPeer(Peer peer);
     }
 }

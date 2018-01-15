@@ -42,6 +42,8 @@ namespace MemeIum.Services
             ThisPeer = new Peer(){Address = externalIp, Port=Configurations.Config.MainPort};
             RequestHeader.Me = ThisPeer;
 
+            Console.WriteLine($"Thispeer : {ThisPeer.Port}");
+
             ActiveRequestForPeers = new List<RequestForPeers>();
 
             _server = Services.GetService<IP2PServer>();
@@ -55,6 +57,14 @@ namespace MemeIum.Services
 
             Peers.CollectionChanged += Peers_CollectionChanged;
 
+        }
+
+        public void RegisterPeer(Peer peer)
+        {
+            if (peer.Port != Configurations.Config.MainPort)
+            {
+                Peers.Add(peer);
+            }
         }
 
         private async void TrySignUpToTracker()
@@ -109,7 +119,7 @@ namespace MemeIum.Services
 
                         if (!inalredy&&(peer.Address != ThisPeer.Address || peer.Port != ThisPeer.Port))
                         {
-                            Peers.Add(peer);
+                            RegisterPeer(peer);
                         }
                     }
                 }
@@ -135,8 +145,8 @@ namespace MemeIum.Services
             {
                 Peers = new ObservableCollection<Peer>();
                 
-                var origins = JsonConvert.DeserializeObject<List<Peer>>(File.ReadAllText(_originsFullPath));
-                InitiateSweap(origins);
+                //var origins = JsonConvert.DeserializeObject<List<Peer>>(File.ReadAllText(_originsFullPath));
+                //InitiateSweap(origins);
             }
         }
 
@@ -158,7 +168,7 @@ namespace MemeIum.Services
         {
             if (Peers.ToList().FindAll(rr => rr.Equals(toadd)).Count == 0 && !ThisPeer.Equals(toadd))
             {
-                Peers.Add(toadd);
+                RegisterPeer(toadd);
                 Logger.Log($"New peer: {toadd.ToString()}");
             }
         }
@@ -204,27 +214,31 @@ namespace MemeIum.Services
             _server.SendResponse(response,source);
         }
 
-        public void Broadcast(object data)
+        public void Broadcast<T>(T data)
         {
-            TrySignUpToTracker();
+            //TrySignUpToTracker();
 
             var invit = new InvitationRequest();
-            if (data.GetType() == typeof(Transaction))
+            var tdata = data as Transaction;
+            var bdata = data as Block;
+            if (tdata != null)
             {
-                var tt = (Transaction) data;
+                var tt = tdata;
                 invit.IsBlock = false;
                 invit.DataId = tt.Body.TransactionId;
             }
-            else if (data.GetType() == typeof(Block))
+            else if (bdata != null)
             {
-                var bb = (Block) data;
+                var bb = bdata;
                 invit.IsBlock = true;
                 invit.DataId = bb.Body.Id;
             }
             else
             {
+                Logger.Log("bad type bad shit");
                 return;
             }
+            Logger.Log($"Broadcasting : {invit.DataId} {invit.IsBlock}");
 
             foreach (var peer in Peers)
             {
