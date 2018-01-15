@@ -154,6 +154,11 @@ namespace MemeIum.Services.Mineing
             var target = _difficultyService.TargetForBlock(newInfo);
             var targetString =Convert.ToBase64String( target.ToByteArray());
             var choosenTxs = ChooseTxs();
+            _logger.Log($"Choosen for mine : {choosenTxs.Count}");
+            foreach (var transaction in choosenTxs)
+            {
+                _logger.Log($"{transaction.Body.TransactionId} - transaction");
+            }
 
             var bBody = new BlockBody()
             {
@@ -217,11 +222,6 @@ namespace MemeIum.Services.Mineing
         {
             var ss = JsonConvert.SerializeObject(MemPool);
             File.WriteAllText(_memPoolFullPath,ss);
-
-            if (Configurations.Config.ShouldMine)
-            {
-                RestartMiners();
-            }
             
         }
 

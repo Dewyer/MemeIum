@@ -38,7 +38,7 @@ namespace MemeIum.Services
         public void ParseRequest(string request,Peer source)
         {
             var header = JsonConvert.DeserializeObject<RequestHeader>(request);
-            Logger.Log(String.Format("V:{0},T:{1},D:{2}",header.Version,header.Type,request),show:true);
+            //Logger.Log(String.Format("V:{0},T:{1},D:{2}",header.Version,header.Type,request),show:true);
             source.Port = header.Sender.Port;
             Logger.Log($"Got {header.Type} {source.Port}");
             Logger.Log($"Ketc {_catchUpService.CaughtUp}");

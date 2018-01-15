@@ -149,6 +149,7 @@ namespace MemeIum.Services.Other
                 if (!_minerService.HasTransactionInMemPool(trans.Body.TransactionId))
                 {
                     _minerService.MemPool.Add(trans);
+                    _minerService.TryRestartingWorkers();
                     _mappingService.Broadcast(trans);
                 }
                 else
