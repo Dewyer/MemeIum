@@ -37,8 +37,7 @@ namespace MemeIum.Services.P2P
             {
                 var rr = client.Receive(ref ep);
                 var ss = Encoding.UTF8.GetString(rr);
-                Task.Run(() => _server.ParseRequest(ss, Peer.FromIPEndPoint(ep)));
-
+                _server.ToParseQueue.Enqueue(()=> _server.ParseRequest(ss,Peer.FromIPEndPoint(ep)));
             }
             Console.WriteLine("[Server]Closing server..");
         }

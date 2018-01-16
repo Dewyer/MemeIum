@@ -108,14 +108,12 @@ namespace MemeIum.Services.Blockchain
         }
 
         public void CleanMemPool(Block block)
-        {
+        {            
             var tsNotOn = new List<Transaction>();
             foreach (var transaction in block.Body.Tx)
             {
-                if (_minerService.MemPool.ToList()
-                    .FindAll(r => r.Body.TransactionId == transaction.Body.TransactionId).Count == 0)
+                if (WantedTransaction(transaction.Body.TransactionId))
                 {
-                    Console.WriteLine("Found inside trans {0}",transaction.Body.TransactionId);
                     tsNotOn.Add(transaction);
                 }
             }
@@ -137,7 +135,7 @@ namespace MemeIum.Services.Blockchain
                 {
                     Info = JsonConvert.DeserializeObject<LocalChainInfo>(File.ReadAllText(infoPath));
                 }
-                catch (Exception e)
+                catch
                 {
                     Info = null;
                 }
@@ -203,7 +201,7 @@ namespace MemeIum.Services.Blockchain
                 {
                     return JsonConvert.DeserializeObject<Block>(text);
                 }
-                catch (Exception ex)
+                catch
                 {
                     _logger.Log("Could not parse block!",2);
                 }
@@ -283,6 +281,11 @@ namespace MemeIum.Services.Blockchain
                 File.WriteAllText(fileName,JsonConvert.SerializeObject(block));
             }
             SaveToDb(block);
+        }
+
+        public bool WantedTransaction(string id)
+        {
+            return WantedTransaction(new InvitationRequest() {DataId = id, IsBlock = false});
         }
 
         public bool WantedTransaction(InvitationRequest transInvitationRequest)

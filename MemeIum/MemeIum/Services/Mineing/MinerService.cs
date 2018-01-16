@@ -195,10 +195,6 @@ namespace MemeIum.Services.Mineing
                 }
             }
             Console.WriteLine("[MinerInfo]Miner finished");
-            foreach (var transaction in choosenTxs)
-            {
-                MemPool.Remove(transaction);
-            }
 
             _eventManager.PassNewTrigger(block,EventTypes.EventType.NewBlock);
         }

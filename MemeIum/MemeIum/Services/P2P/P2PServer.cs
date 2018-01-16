@@ -21,13 +21,34 @@ namespace MemeIum.Services
         private ICatchUpService _catchUpService;
         private IMappingService _mappingService;
 
+        public Queue<Action> ToParseQueue { get; set; }
+
         public void Init()
         {
             Logger = Services.GetService<ILogger>();
             _blockChainService = Services.GetService<IBlockChainService>();
             _catchUpService = Services.GetService<ICatchUpService>();
             _mappingService = Services.GetService<IMappingService>();
+            ToParseQueue = new Queue<Action>();
+            var parser = new Thread(new ThreadStart(ParserThread));
+            parser.Start();
             Start();
+        }
+
+        public void ParserThread()
+        {
+            while (true)
+            {
+                if (ToParseQueue.Count > 0)
+                {
+                    var action = ToParseQueue.Dequeue();
+                    action();
+                }
+                else
+                {
+                    Thread.Sleep(10);
+                }
+            }
         }
 
         public void Start()
@@ -40,8 +61,8 @@ namespace MemeIum.Services
             var header = JsonConvert.DeserializeObject<RequestHeader>(request);
             //Logger.Log(String.Format("V:{0},T:{1},D:{2}",header.Version,header.Type,request),show:true);
             source.Port = header.Sender.Port;
-            Logger.Log($"Got {header.Type} {source.Port}");
-            Logger.Log($"Ketc {_catchUpService.CaughtUp}");
+            //Logger.Log($"Got {header.Type} {source.Port}");
+            //Logger.Log($"Ketc {_catchUpService.CaughtUp}");
 
             var mapper = Services.GetService<IMappingService>();
             if (header.Type == 0)
@@ -75,12 +96,12 @@ namespace MemeIum.Services
                 var req = JsonConvert.DeserializeObject<TransactionRequest>(request);
                 if (_catchUpService.CaughtUp)
                 {
-                    Logger.Log("New data to pars");
+                    //Logger.Log("New data to pars");
                     _blockChainService.ParseDataRequest(req);
                 }
                 else
                 {
-                    Logger.Log("New data to kechup");
+                    //Logger.Log("New data to kechup");
                     _catchUpService.ParseCatchUpData(req);
                 }
             }
@@ -124,7 +145,7 @@ namespace MemeIum.Services
                 return;
             }
             hd.Sender.Port = Configurations.Config.MainPort;
-            Logger.Log($"Sent : {hd.Type} | {peer.Address} {peer.Port} - from : {hd.Sender.Port}");
+            //Logger.Log($"Sent : {hd.Type} | {peer.Address} {peer.Port} - from : {hd.Sender.Port}");
             var ep = peer.ToEndPoint();
             var msg = JsonConvert.SerializeObject(response);
             var bytes = Encoding.UTF8.GetBytes(msg);

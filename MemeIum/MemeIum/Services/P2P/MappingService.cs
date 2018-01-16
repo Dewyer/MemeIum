@@ -42,8 +42,6 @@ namespace MemeIum.Services
             ThisPeer = new Peer(){Address = externalIp, Port=Configurations.Config.MainPort};
             RequestHeader.Me = ThisPeer;
 
-            Console.WriteLine($"Thispeer : {ThisPeer.Port}");
-
             ActiveRequestForPeers = new List<RequestForPeers>();
 
             _server = Services.GetService<IP2PServer>();
@@ -238,7 +236,7 @@ namespace MemeIum.Services
                 Logger.Log("bad type bad shit");
                 return;
             }
-            Logger.Log($"Broadcasting : {invit.DataId} {invit.IsBlock}");
+            //Logger.Log($"Broadcasting : {invit.DataId} {invit.IsBlock}");
 
             foreach (var peer in Peers)
             {

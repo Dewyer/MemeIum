@@ -12,5 +12,6 @@ namespace MemeIum.Services
         void Start();
         void SendResponse(object response,Peer to);
         void ParseRequest(string request, Peer source);
+        Queue<Action> ToParseQueue { get; set; }
     }
 }

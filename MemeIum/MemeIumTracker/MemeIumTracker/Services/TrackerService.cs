@@ -59,14 +59,17 @@ namespace MemeIumTracker.Services
         public List<Peer> GetAllPeers()
         {
             var stay = new List<Peer>();
+            var newTimes = new Dictionary<string,DateTime>();
             foreach (var peer in All)
             {
                 if ((DateTime.UtcNow - Times[peer.ToString()]).TotalMinutes <= 2)
                 {
                     stay.Add(peer);
+                    newTimes.Add(peer.ToString(),Times[peer.ToString()]);
                 }
             }
             All = stay;
+            Times = newTimes;
             return All;
         }
 
@@ -86,16 +89,7 @@ namespace MemeIumTracker.Services
                 All.Add(peer);
                 Times.Add(peer.ToString(),DateTime.UtcNow);
             }
-
-            if ((DateTime.UtcNow - Times[peer.ToString()]).TotalMinutes <= 2)
-            {
-                return true;
-            }
-            else
-            {
-                Times.Remove(peer.ToString());
-            }
-            return false;
+            return true;
         }
     }
 
