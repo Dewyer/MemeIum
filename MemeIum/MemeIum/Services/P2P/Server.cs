@@ -29,6 +29,10 @@ namespace MemeIum.Services.P2P
             var epmy = IPAddress.Parse(externalip);
             Console.WriteLine("[Server]Me : "+epmy.AddressFamily.ToString());
             var ipep = new IPEndPoint(IPAddress.Any, Port);
+            if (epmy.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                ipep = new IPEndPoint(IPAddress.IPv6Any,Port);
+            }
             var client = new UdpClient(epmy.AddressFamily);
             client.Client.Bind(ipep);
             var ep = new IPEndPoint(IPAddress.Any, 0);
