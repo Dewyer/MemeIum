@@ -61,8 +61,12 @@ namespace MemeIum.Services
             var header = JsonConvert.DeserializeObject<RequestHeader>(request);
             //Logger.Log(String.Format("V:{0},T:{1},D:{2}",header.Version,header.Type,request),show:true);
             source.Port = header.Sender.Port;
-            //Logger.Log($"Got {header.Type} {source.Port}");
+            Logger.Log($"Got {header.Type} {source.Port}");
             //Logger.Log($"Ketc {_catchUpService.CaughtUp}");
+            if (source.Address.StartsWith("192"))
+            {
+                source.Address = header.Sender.Address;
+            }
 
             var mapper = Services.GetService<IMappingService>();
             if (header.Type == 0)
@@ -145,7 +149,7 @@ namespace MemeIum.Services
                 return;
             }
             hd.Sender.Port = Configurations.Config.MainPort;
-            //Logger.Log($"Sent : {hd.Type} | {peer.Address} {peer.Port} - from : {hd.Sender.Port}");
+            Logger.Log($"Sent : {hd.Type} | {peer.Address} {peer.Port} - from : {hd.Sender.Port}");
             var ep = peer.ToEndPoint();
             var msg = JsonConvert.SerializeObject(response);
             var bytes = Encoding.UTF8.GetBytes(msg);

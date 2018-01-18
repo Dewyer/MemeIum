@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Xml;
 using MemeIum.Misc;
 using MemeIum.Misc.Transaction;
 using MemeIum.Requests;
@@ -77,6 +78,7 @@ namespace MemeIum.Services.CatchUp
         public void ParseCatcherUpRequest(CatcherUpRequest request,Peer from)
         {
             supposedLongestBlockId = request.EndOfLongestChain;
+            _logger.Log($"Ketchupper {request.EndOfLongestChain} - Count:{request.Invs.Count}");
 
             foreach (var inv in request.Invs)
             {
@@ -105,7 +107,12 @@ namespace MemeIum.Services.CatchUp
                     }
                 }
             }
-            
+
+            if (request.EndOfLongestChain == _blockChainService.Info.EndOfLongestChain && request.Invs.Count == 0)
+            {
+                CaughtUp = true;
+                _logger.Log("Ketchup cas its ended and no invs.");
+            }
         }
 
         public Block LoadBufferedBlock(string id)
@@ -264,7 +271,7 @@ namespace MemeIum.Services.CatchUp
                     catcherUp.Invs.Add(inv);
                 }
             }
-
+            Console.WriteLine("Response to didI {0} {1}",catcherUp.EndOfLongestChain,catcherUp.Invs.Count);
             _server.SendResponse(catcherUp,from);
         }
     }

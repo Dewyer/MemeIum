@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Security.Cryptography;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading;
 using MemeIum.Misc;
@@ -21,6 +22,7 @@ namespace MemeIum.Services.Mineing
     {
         public ObservableCollection<Transaction> MemPool { get; set; }
         public List<Thread> CurrentWorkers { get; set; }
+        public static Dictionary<int, bool> Terminators;
 
         private IBlockChainService _blockChainService;
         private IDifficultyService _difficultyService;
@@ -46,6 +48,7 @@ namespace MemeIum.Services.Mineing
             MemPool.CollectionChanged += MemPool_CollectionChanged;
 
             CurrentWorkers = new List<Thread>();
+            Terminators = new Dictionary<int, bool>();
 
             TryRestartingWorkers();
         }
@@ -137,7 +140,9 @@ namespace MemeIum.Services.Mineing
 
         private void Miner()
         {
-            Console.WriteLine("[Info]New miner {0}",Thread.CurrentThread.ManagedThreadId);
+            var id = Thread.CurrentThread.ManagedThreadId;
+            Console.WriteLine("[Info]New miner {0}",id);
+            Terminators.Add(id,false);
             if (MemPool.Count == 0)
             {
                 return;
@@ -190,20 +195,32 @@ namespace MemeIum.Services.Mineing
                 tries++;
                 if (tries % 100000 == 0)
                 {
-                    Console.WriteLine("[MinerInfo]Hashing at - {0}/Hs | Working on {1} rips of block",(DateTime.UtcNow-lastTime).TotalSeconds* 100000, totalRips.ToString());
+                    Console.WriteLine("[MinerInfo]{0}|Hashing at - {1}/Hs | Working on {2} rips of block",Thread.CurrentThread.ManagedThreadId, 100000f* 1/(DateTime.UtcNow-lastTime).TotalSeconds, totalRips.ToString());
                     lastTime = DateTime.UtcNow;
                 }
-            }
-            Console.WriteLine("[MinerInfo]Miner finished");
 
-            _eventManager.PassNewTrigger(block,EventTypes.EventType.NewBlock);
+                if (Terminators[id])
+                {
+                    Console.WriteLine("[MinerInfo]{0}|Aborting",id);
+                    break;
+                }
+            }
+            if (!Terminators[id])
+            {
+                Console.WriteLine("[MinerInfo]Miner finished");
+
+                _eventManager.PassNewTrigger(block, EventTypes.EventType.NewBlock);
+            }
         }
 
+        [SecurityPermission(SecurityAction.Demand, ControlThread = true)]
         private void RestartMiners()
         {
-            foreach (var currentWorker in CurrentWorkers)
+            var threadIds = new List<int>();
+            threadIds.AddRange(Terminators.Keys.ToList());
+            foreach (var threadId in threadIds)
             {
-                currentWorker.Abort();
+                Terminators[threadId] = true;
             }
 
             CurrentWorkers = new List<Thread>();

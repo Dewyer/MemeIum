@@ -83,17 +83,17 @@ namespace MemeIum.Services
 
         public void PeerUpdateLoop()
         {
-            var first = true;
+            var runs = 0;
             while (true)
             {
                 TryTracker();
                 TrySignUpToTracker();
-                if (first)
+                Task.Delay(2000).Wait();
+                if (runs == 3)
                 {
                     _catcherUp.StartCatchup();
                 }
-                Task.Delay(2000).Wait();
-                first = false;
+                runs++;
             }
         }
 

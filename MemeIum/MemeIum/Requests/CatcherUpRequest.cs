@@ -15,7 +15,7 @@ namespace MemeIum.Requests
         {
             Sender = RequestHeader.Me;
             Version = Configurations.Config.Version;
-            Type = RequestHeader.RequestIndexes[typeof(DidICatchUpRequest)];
+            Type = RequestHeader.RequestIndexes[typeof(CatcherUpRequest)];
         }
 
     }

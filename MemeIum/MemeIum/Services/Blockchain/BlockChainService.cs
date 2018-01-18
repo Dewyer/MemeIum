@@ -110,11 +110,15 @@ namespace MemeIum.Services.Blockchain
         public void CleanMemPool(Block block)
         {            
             var tsNotOn = new List<Transaction>();
-            foreach (var transaction in block.Body.Tx)
+            foreach (var transaction in _minerService.MemPool)
             {
-                if (WantedTransaction(transaction.Body.TransactionId))
+                if (block.Body.Tx.FindAll(r => r.Body.TransactionId == transaction.Body.TransactionId).Count == 0)
                 {
                     tsNotOn.Add(transaction);
+                }
+                else
+                {
+                    _logger.Log($"Removed a transaction from the mempool {transaction.Body.TransactionId}");
                 }
             }
 
@@ -433,6 +437,10 @@ namespace MemeIum.Services.Blockchain
             while (atB.CreationTime >= fromtime)
             {
                 bb.Add(atB);
+                if (atB.LastBlockId == "0")
+                {
+                    break;
+                }
                 atB = LookUpBlockInfo(atB.LastBlockId);
             }
 

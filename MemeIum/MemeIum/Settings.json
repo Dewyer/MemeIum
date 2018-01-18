@@ -6,7 +6,7 @@
   "SecondsToWaitForAddresses": 20,
   "ShouldMine": true,
   "MaxThreadsToMineOn": 1,
-  "SecondsToWaitBetweenCatchUpLoops": 60,
+  "SecondsToWaitBetweenCatchUpLoops": 3,
   "MinLogLevelToSave": 0,
   "MinLogLevelToDisplay": 0
 }
