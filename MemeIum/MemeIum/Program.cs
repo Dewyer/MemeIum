@@ -6,6 +6,7 @@ using System.Threading;
 using MemeIum.Services;
 using MemeIum.Services.Blockchain;
 using MemeIum.Services.CatchUp;
+using MemeIum.Services.EmbededWebServer;
 using MemeIum.Services.Eventmanagger;
 using MemeIum.Services.EventManager;
 using MemeIum.Services.Mineing;
@@ -15,7 +16,7 @@ using MemeIum.Services.Wallet;
 
 namespace MemeIum
 {
-    class Program
+    public class Program
     {
         private static IP2PServer Server { get; set; }
         private static ILogger Logger { get; set; }
@@ -45,7 +46,7 @@ namespace MemeIum
 
         }
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             Configurations.MainThreadRunning = true;
 
@@ -63,6 +64,7 @@ namespace MemeIum
             Services.Services.RegisterSingeleton<IP2PServer,P2PServer>();
             Services.Services.RegisterSingeleton<IMappingService,MappingService>();
             Services.Services.RegisterSingeleton<ICatchUpService,CatchUpService>();
+            Services.Services.RegisterSingeleton<IEmbededWebServer,EmbededWebServer>();
             Services.Services.RegisterSingeleton<IUI,Ui>();
             Services.Services.Initialize();
 
@@ -79,3 +81,4 @@ namespace MemeIum
         }
     }
 }
+

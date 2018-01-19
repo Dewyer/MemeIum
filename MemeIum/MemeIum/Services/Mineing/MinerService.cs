@@ -142,7 +142,15 @@ namespace MemeIum.Services.Mineing
         {
             var id = Thread.CurrentThread.ManagedThreadId;
             Console.WriteLine("[Info]New miner {0}",id);
-            Terminators.Add(id,false);
+            if (Terminators.ContainsKey(id))
+            {
+                Terminators[id] = false;
+            }
+            else
+            {
+                Terminators.Add(id, false);
+            }
+
             if (MemPool.Count == 0)
             {
                 return;

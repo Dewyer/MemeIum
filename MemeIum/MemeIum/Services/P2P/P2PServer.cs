@@ -149,12 +149,15 @@ namespace MemeIum.Services
                 return;
             }
             hd.Sender.Port = Configurations.Config.MainPort;
-            Logger.Log($"Sent : {hd.Type} | {peer.Address} {peer.Port} - from : {hd.Sender.Port}");
             var ep = peer.ToEndPoint();
+            Logger.Log($"Sent : {hd.Type} | {peer.Address} {peer.Port} {ep.AddressFamily.ToString()} - from : {hd.Sender.Port}");
             var msg = JsonConvert.SerializeObject(response);
             var bytes = Encoding.UTF8.GetBytes(msg);
             var client = new UdpClient(ep.AddressFamily);
-
+            if (ep.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                client.Client.DualMode = true;
+            }
             client.Send(bytes, bytes.Length,ep);
             
         }
