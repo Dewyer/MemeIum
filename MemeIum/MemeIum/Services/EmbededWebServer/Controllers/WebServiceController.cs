@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using MemeIum.Misc.Transaction;
 using MemeIum.Services.Eventmanagger;
 using MemeIum.Services.Other;
@@ -38,10 +40,9 @@ namespace MemeIum.Services.EmbededWebServer.Controllers
         {
             try
             {
+                Console.WriteLine("[HTTPInfo]Got asked to balance.");
                 var vouts = _transactionVerifier.GetAllTransactionVOutsForAddress(addr);
-                var balance = vouts.Sum(r => r.Amount) / 100000f;
-
-                return context.JsonResponse(new {balance=balance,Address=addr});
+                return context.JsonResponse(vouts);
             }
             catch (Exception ex)
             {
@@ -49,12 +50,32 @@ namespace MemeIum.Services.EmbededWebServer.Controllers
             }
         }
 
-        [WebApiHandler(HttpVerbs.Post, "/api/sendtransaction/{bodyjson}")]
-        public bool PostTransactionProposal(WebServer server, HttpListenerContext context, string bodyjson)
+        public async Task<string> GetTransactionFromServices(string site,string id)
         {
             try
             {
-                var trans = JsonConvert.DeserializeObject<Transaction>(bodyjson);
+                using (var client = new HttpClient())
+                {
+                    var uri = new Uri($"http://{site}/trans/{id}.json");
+                    var ss = await client.GetStringAsync(uri);
+                    return ss;
+                }
+            }
+            catch (Exception e)
+            {
+                return "";
+            }
+        }
+
+        [WebApiHandler(HttpVerbs.Get, "/api/sendtransaction/{site}/{id}")]
+        public bool PostTransactionProposal(WebServer server, HttpListenerContext context,string site,string id)
+        {
+            try
+            {
+                Console.WriteLine("[HTTPInfo]Got asked to deliver trans : {0} {1}",site,id);
+                var tt = GetTransactionFromServices(site,id);
+                tt.Wait();
+                var trans = JsonConvert.DeserializeObject<Transaction>(tt.Result);
                 if (trans != null)
                 {
                     if (_transactionVerifier.Verify(trans))

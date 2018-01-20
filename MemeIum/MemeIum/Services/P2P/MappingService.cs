@@ -27,7 +27,7 @@ namespace MemeIum.Services
         private string _peersFullPath;
         private string _originsFullPath;
 
-        public Peer ThisPeer;
+        public Peer ThisPeer { get; set; }
         private string _trackerIp = "http://memeiumtracker.azurewebsites.net/track";
         private string _trackerSignUp = "http://memeiumtracker.azurewebsites.net/track/set?";
         private string externalIp;

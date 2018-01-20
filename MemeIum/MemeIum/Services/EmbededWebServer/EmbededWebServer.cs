@@ -6,6 +6,7 @@ using MemeIum.Services.EmbededWebServer.Controllers;
 using Unosquare.Labs.EmbedIO;
 using Unosquare.Labs.EmbedIO.Constants;
 using Unosquare.Labs.EmbedIO.Modules;
+using Unosquare.Swan;
 
 namespace MemeIum.Services.EmbededWebServer
 {
@@ -15,14 +16,16 @@ namespace MemeIum.Services.EmbededWebServer
         public int WebServicePort { get; set; }
         private WebServer _server { get; set; }
         private ILogger _logger;
+        private IMappingService _mappingService;
 
         public void Init()
         {
             _logger = Services.GetService<ILogger>();
+            _mappingService = Services.GetService<IMappingService>();
             _logger.Log("Starting web server.");
 
             Running = true;
-            WebServicePort = Configurations.Config.MainPort + 1;
+            WebServicePort = 8844;
             var sTh = new Thread(new ThreadStart(RunServer));
             sTh.IsBackground = true;
             sTh.Start();
@@ -30,10 +33,13 @@ namespace MemeIum.Services.EmbededWebServer
 
         private void RunServer()
         {
-            _server = new WebServer("http://localhost:"+WebServicePort+"/", RoutingStrategy.Regex);
+            //Terminal.Settings.DisplayLoggingMessageType = LogMessageType.None;
+            var prefixes = new string[] { "http://localhost:" + WebServicePort+"/"};
+            _server = new WebServer(prefixes, RoutingStrategy.Regex);
             _server.RegisterModule(new WebApiModule());
             _server.Module<WebApiModule>().RegisterController<WebServiceController>();
-            _server.RunAsync();
+            var cr = new CancellationToken();
+            _server.RunAsync(cr).Wait();
             while (Running)
             {
             }

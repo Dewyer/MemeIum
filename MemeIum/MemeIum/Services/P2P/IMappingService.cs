@@ -16,5 +16,6 @@ namespace MemeIum.Services
         void Broadcast<T>(T data);
         ObservableCollection<Peer> Peers { get; set; }
         void RegisterPeer(Peer peer);
+        Peer ThisPeer { get; set; }
     }
 }
