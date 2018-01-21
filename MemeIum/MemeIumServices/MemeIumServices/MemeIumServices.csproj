@@ -16,4 +16,10 @@
     <Folder Include="wwwroot\trans\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\js\transmaker.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

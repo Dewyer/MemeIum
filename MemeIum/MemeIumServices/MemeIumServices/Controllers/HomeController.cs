@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using MemeIumServices.Models;
@@ -29,25 +30,30 @@ namespace MemeIumServices.Controllers
         [HttpPost]
         public IActionResult Send()
         {
-            Transaction trans = null;
-            //nodeCom.UpdatePeers();
-            //var tt = nodeCom.RequestToRandomPeer($"api/getbalance/Ya5HUuXRT79VA4IL0FlM7DXtOeXcdaWsas68bzY3zDs=");
-            //tt.Wait();
-            //return new ObjectResult(tt.Result);
-            try
+            nodeCom.UpdatePeers();
+            var oo = nodeCom.SendTransaction(Request.Form);
+            if (oo)
             {
-                trans = nodeCom.GetTransactionFromForm(Request.Form);
+                return new ObjectResult(new {succ="Transaction succesfully delivered"});
             }
-            catch (Exception ex)
-            {
-                return new ObjectResult(new { error = ex.Message+"    "+ex.StackTrace });
-            }
-            if (trans != null)
-            {
-                var oo = nodeCom.SendTransaction(trans);
-                return new ObjectResult(new { error = oo });
-            }
-            return new ObjectResult(new { error =true });
+            return new ObjectResult(new { error = true });
+        }
+
+        [HttpGet]
+        public IActionResult GenerateWallet()
+        {
+            var rsa = new RSACryptoServiceProvider(2000);
+            var priv = rsa.ExportParameters(true);
+            var sw = new System.IO.StringWriter();
+            var xs = new System.Xml.Serialization.XmlSerializer(typeof(RSAParameters));
+            xs.Serialize(sw, priv);
+
+            return View(model:sw.ToString());
+        }
+
+        public IActionResult GetBalance(string address)
+        {
+            return ViewComponent("GetBalance", new { addr = address });
         }
 
         public IActionResult Index()

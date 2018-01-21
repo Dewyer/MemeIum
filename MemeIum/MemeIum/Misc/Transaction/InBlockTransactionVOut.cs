@@ -24,6 +24,12 @@ namespace MemeIum.Misc.Transaction
                     return false;
                 }
             }
+
+            if (this.Amount <= 0)
+            {
+                return false;
+            }
+
             return true;
         }
     }

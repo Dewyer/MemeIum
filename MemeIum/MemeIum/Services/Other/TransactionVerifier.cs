@@ -314,6 +314,11 @@ namespace MemeIum.Services.Other
             if (string.IsNullOrEmpty(transaction.Body.PubKey))
                 return false;
 
+            if (transaction.Body.VInputs.Count == 0 || transaction.Body.VOuts.Count == 0)
+            {
+                return false;
+            }
+
             return true;
         }
 

@@ -24,6 +24,8 @@ namespace MemeIumServices
         {
             services.AddMvc();
             services.AddSingleton<INodeComService, NodeComService>();
+            services.AddSingleton<ITransactionUtil, TransactionUtil>();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

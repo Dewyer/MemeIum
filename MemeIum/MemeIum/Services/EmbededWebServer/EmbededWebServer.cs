@@ -25,7 +25,7 @@ namespace MemeIum.Services.EmbededWebServer
             _logger.Log("Starting web server.");
 
             Running = true;
-            WebServicePort = 8844;
+            WebServicePort = Configurations.Config.MainPort+1;
             var sTh = new Thread(new ThreadStart(RunServer));
             sTh.IsBackground = true;
             sTh.Start();
@@ -33,13 +33,15 @@ namespace MemeIum.Services.EmbededWebServer
 
         private void RunServer()
         {
-            //Terminal.Settings.DisplayLoggingMessageType = LogMessageType.None;
-            var prefixes = new string[] { "http://localhost:" + WebServicePort+"/"};
+            Terminal.Settings.DisplayLoggingMessageType = LogMessageType.None;
+            var prefixes = new string[] { "http://*:" + WebServicePort+"/"};
             _server = new WebServer(prefixes, RoutingStrategy.Regex);
+            //_server.Listener.Prefixes.Add("http://*:"+WebServicePort+"/");
             _server.RegisterModule(new WebApiModule());
             _server.Module<WebApiModule>().RegisterController<WebServiceController>();
             var cr = new CancellationToken();
-            _server.RunAsync(cr).Wait();
+            //_server.Listener.Start();
+            _server.RunAsync(cr);
             while (Running)
             {
             }

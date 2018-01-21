@@ -56,7 +56,7 @@ namespace MemeIum.Services.EmbededWebServer.Controllers
             {
                 using (var client = new HttpClient())
                 {
-                    var uri = new Uri($"http://{site}/trans/{id}.json");
+                    var uri = new Uri($"{site}/trans/{id}.json");
                     var ss = await client.GetStringAsync(uri);
                     return ss;
                 }
@@ -86,7 +86,7 @@ namespace MemeIum.Services.EmbededWebServer.Controllers
                     }
                 }
                 context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                return context.JsonResponse(new { ok = false });
+                return context.JsonResponse(new {ok=false});
 
             }
             catch (Exception ex)

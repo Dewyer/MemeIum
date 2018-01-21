@@ -22,7 +22,19 @@ function privChanged() {
     md.update(exp + " " + mod);
     var addr = hexToBase64(md.digest().toHex());
     console.log(addr);
+    updateBal(addr);
     $("#addr").val(addr);
+
+}
+
+function updateBal(addr) {
+    console.log("treied");
+    $.get("/Home/GetBalance?address=" + addr, function (data) {
+        console.log("loaded");
+        $("#balance").val(data);
+    });
+    console.log("treied");
+
 }
 
 function getNewListElemntCode(ii) {

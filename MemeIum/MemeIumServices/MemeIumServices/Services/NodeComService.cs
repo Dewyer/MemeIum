@@ -17,10 +17,9 @@ namespace MemeIumServices.Services
     public interface INodeComService
     {
         List<Peer> Peers { get; set; }
-        object SendTransaction(Transaction transaction);
-        Transaction GetTransactionFromForm(IFormCollection form);
+        bool SendTransaction(IFormCollection form);
         void UpdatePeers();
-        Task<string> RequestToRandomPeer(string subiro);
+        Task<string> ReliableRequest(string suburi);
         List<TransactionVOut> GetUnspentVOutsForAddress(string addr);
     }
 
@@ -35,10 +34,13 @@ namespace MemeIumServices.Services
         public List<Peer> Peers { get; set; }
         private Random rng;
         private IHostingEnvironment hostingEnvironment;
+        private ITransactionUtil transactionUtil;
+        private string hostname = "http://memeium.azurewebsites.net";
 
-        public NodeComService(IHostingEnvironment env)
+        public NodeComService(IHostingEnvironment env,ITransactionUtil _transactionUtil)
         {
             hostingEnvironment = env;
+            transactionUtil = _transactionUtil;
             Peers = new List<Peer>();
             rng = new Random();
         }
@@ -54,12 +56,6 @@ namespace MemeIumServices.Services
             }
         }
 
-        public RSAParameters RsaParametersFromString(string str)
-        {
-            var sr = new System.IO.StringReader(str);
-            var xs = new System.Xml.Serialization.XmlSerializer(typeof(RSAParameters));
-            return (RSAParameters)xs.Deserialize(sr);
-        }
 
         public List<InBlockTransactionVOut> GetVoutsFromForm(IFormCollection form,string fromaddr)
         {
@@ -92,63 +88,6 @@ namespace MemeIumServices.Services
             return outV;
         }
 
-        public Transaction MakeTransaction(TransactionBody body,RSACryptoServiceProvider provider)
-        {
-            var bod = JsonConvert.SerializeObject(body);
-            var bbytes = Encoding.UTF8.GetBytes(bod);
-            var sign = provider.SignData(bbytes, new SHA256CryptoServiceProvider());
-            var signString = Convert.ToBase64String(sign);
-
-            var req = new Transaction()
-            {
-                Body = body,
-                Signature = signString
-            };
-
-            return req;
-        }
-
-        public Transaction GetTransactionFromForm(IFormCollection form)
-        {
-            var from = form["addr"].ToString();
-            var privKeyString = form["privkey"].ToString();
-            var rsa = new RSACryptoServiceProvider();
-            rsa.ImportParameters(RsaParametersFromString(privKeyString));
-            var exponentStr = Convert.ToBase64String(rsa.ExportParameters(false).Exponent);
-            var modulusStr = Convert.ToBase64String(rsa.ExportParameters(false).Modulus);
-
-            var unspent = GetUnspentVOutsForAddress(from);
-            var vins = new List<TransactionVIn>();
-            foreach (var transactionVOut in unspent)
-            {
-                vins.Add(new TransactionVIn(){FromBlockId = transactionVOut.FromBlock,OutputId = transactionVOut.Id});
-            }
-            var total = unspent.Sum(r => r.Amount);
-            var vouts = GetVoutsFromForm(form,from);
-            var selfvout = new TransactionVOut()
-            {
-                Amount = total-vouts.Sum(r=>r.Amount),
-                FromAddress = from,
-                ToAddress = from,
-                FromBlock = ""
-            };
-            TransactionVOut.SetUniqueIdForVOut(selfvout);
-            vouts.Add(selfvout.GetInBlockTransactionVOut());
-
-            var transactionBody = new TransactionBody()
-            {
-                FromAddress = from,
-                Message = form["msg"].ToString(),
-                PubKey = exponentStr+" "+modulusStr,
-                VInputs = vins,
-                VOuts = vouts
-            };
-            TransactionBody.SetUniqueIdForBody(transactionBody);
-
-            var tt = MakeTransaction(transactionBody, rsa);
-            return tt;
-        }
-
         public string SaveTransaction(Transaction transaction)
         {
             var tt = JsonConvert.SerializeObject(transaction);
@@ -157,38 +96,92 @@ namespace MemeIumServices.Services
             return id;
         }
 
-        public object SendTransaction(Transaction transaction)
+        public class Ok
         {
-            UpdatePeers();
-            var id = SaveTransaction(transaction);
-
-            var resp = RequestToRandomPeer($"api/sendtransaction/localhost:53479/{id}");
-            resp.Wait();
-            
-            return resp.Result;
+            public bool ok { get; set; }
         }
 
-        public async Task<string> RequestToRandomPeer(string subiro)
+        public bool SendTransaction(IFormCollection form)
         {
-            try
+            UpdatePeers();
+            var from = form["addr"].ToString();
+
+            var target = GetVoutsFromForm(form,from);
+            var unspent = GetUnspentVOutsForAddress(from);
+
+            if (target.FindAll(r => r.Amount <= 0).Count > 0)
             {
-                //var randomPeer = Peers[rng.Next(0, Peers.Count)];
-                using (var client = new HttpClient())
-                {
-                    var uri = new Uri($"http://localhost:4243/{subiro}");
-                    var ss = await client.GetStringAsync(uri);
-                    return ss;
-                }
+                return false;
             }
-            catch (Exception ex)
+            if (target.Sum(r => r.Amount) > unspent.Sum(r => r.Amount))
             {
-                return ex.Message +"  "+ex.StackTrace;
+                return false;
+            }
+
+            var trans = transactionUtil.GetTransactionFromForm(form,target,unspent);
+            var id = SaveTransaction(trans);
+
+            var resp = ReliableRequest($"api/sendtransaction/{hostname}/{id}");
+            resp.Wait();
+
+            var suc = JsonConvert.DeserializeObject<Ok>(resp.Result);
+
+            return suc.ok;
+        }
+
+        public async Task<string> ReliableRequest(string suburi)
+        {
+            for (int ll = 0; ll < 20; ll++)
+            {
+                Shuffle(Peers);
+                foreach (Peer peer in Peers)
+                {
+                    var resp = "";
+
+                    try
+                    {
+                        resp = await RequestToPeer(suburi, peer);
+                    }
+                    catch
+                    {
+                        resp = "";
+                    }
+                    if (resp != "")
+                    {
+                        return resp;
+                    }
+                }
+                await Task.Delay(100);
+            }
+            return "";
+        }
+
+        public void Shuffle<T>(IList<T> list)
+        {
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                T value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
+        }
+
+        public async Task<string> RequestToPeer(string subiro,Peer peer)
+        {
+            using (var client = new HttpClient())
+            {
+                var uri = new Uri($"http://{peer.Address}:{peer.Port + 1}/{subiro}");
+                var ss = await client.GetStringAsync(uri);
+                return ss;
             }
         }
 
         public List<TransactionVOut> GetUnspentVOutsForAddress(string addr)
         {
-            var resp =RequestToRandomPeer($"api/getbalance/{addr}");
+            var resp = ReliableRequest($"api/getbalance/{addr}");
             resp.Wait();
             if (resp.Result == "")
             {
