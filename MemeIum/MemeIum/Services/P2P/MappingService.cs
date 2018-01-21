@@ -7,12 +7,14 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using MemeIum.Misc;
 using MemeIum.Misc.Transaction;
 using MemeIum.Requests;
 using MemeIum.Services.CatchUp;
 using Newtonsoft.Json;
+using Open.Nat;
 
 namespace MemeIum.Services
 {
@@ -55,6 +57,25 @@ namespace MemeIum.Services
 
             Peers.CollectionChanged += Peers_CollectionChanged;
 
+            try
+            {
+                DoUPnP().Wait();
+                Logger.Log("NAT traversal successfull.");
+            }
+            catch (Exception ex)
+            {
+                Logger.Log("UPnP NAT traversal error: "+ex.Message+" || "+ex.StackTrace,2);
+            }
+        }
+
+        public async Task DoUPnP()
+        {
+            var discoverer = new NatDiscoverer();
+            var cts = new CancellationTokenSource(10000);
+            var device = await discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cts);
+
+            await device.CreatePortMapAsync(new Mapping(Protocol.Udp, Configurations.Config.MainPort, Configurations.Config.MainPort, "Main UDP#1"));
+            await device.CreatePortMapAsync(new Mapping(Protocol.Tcp, Configurations.Config.MainPort+1, Configurations.Config.MainPort+1, "Main HTTP#1"));
         }
 
         public void RegisterPeer(Peer peer)

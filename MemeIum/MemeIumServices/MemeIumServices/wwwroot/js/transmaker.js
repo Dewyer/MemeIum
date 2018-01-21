@@ -29,7 +29,13 @@ function privChanged() {
 
 function updateBal(addr) {
     console.log("treied");
-    $.get("/Home/GetBalance?address=" + addr, function (data) {
+    var addrn = addr;
+    addrn = addrn.replace(/\+/g, "%2B");
+    addrn = addrn.replace(/\//g, "%2F");
+    addrn = addrn.replace(/\=/g, "%3D");
+
+    console.log(addrn);
+    $.get("/Home/GetBalance?address=" + addrn, function (data) {
         console.log("loaded");
         $("#balance").val(data);
     });
