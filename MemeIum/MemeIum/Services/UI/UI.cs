@@ -92,58 +92,14 @@ namespace MemeIum.Services.UI
             _logger.Log(GetIndentTabs()+$"Address : {addr} , Balance : {balance} Memeium",displayInfo:false);
         }
 
-        public void SendTShort(string to, float ammount,string msg) {
-            var vouts = _transactionVerifier.GetAllTransactionVOutsForAddress(_walletService.Address);
-            var balanceRips = vouts.Sum(r => r.Amount);
-            var balanceC = balanceRips / 100000f;
-            var amountInRips =(int)( ammount * 100000);
+        public void SendTShort(string to, float ammount,string msg)
+        {
 
-            if (balanceC >= ammount)
-            {
-                var inps = new List<TransactionVIn>();
+            var trans = _walletService.AssembleTransaction(to, ammount, msg);
+            if (trans == null)
+                return;
 
-                foreach (var vv in vouts)
-                {
-                    var tVin = new TransactionVIn()
-                    {
-                        FromBlockId = vv.FromBlock,
-                        OutputId = vv.Id
-                    };
-                    inps.Add(tVin);
-                }
-
-                var vout = new TransactionVOut()
-                {
-                    Amount = amountInRips,
-                    FromAddress = _walletService.Address,
-                    ToAddress = to,
-
-                };
-                var selfVout = new TransactionVOut()
-                {
-                    Amount = balanceRips-amountInRips,
-                    FromAddress = _walletService.Address,
-                    ToAddress = _walletService.Address
-                };
-                TransactionVOut.SetUniqueIdForVOut(vout);
-                TransactionVOut.SetUniqueIdForVOut(selfVout);
-
-                var body = new TransactionBody()
-                {
-                    FromAddress = _walletService.Address,
-                    Message = msg,
-                    PubKey = _walletService.PubKey,
-                    VInputs = inps,
-                    VOuts = new List<InBlockTransactionVOut> { vout.GetInBlockTransactionVOut(),selfVout.GetInBlockTransactionVOut() }
-                };
-                TransactionBody.SetUniqueIdForBody(body);
-                var trans = _walletService.MakeTransaction(body);
-
-                _eventManager.PassNewTrigger(trans, EventTypes.EventType.NewTransaction);
-            }
-            else {
-                _logger.Log("Insufficent funds!");
-            }
+             _eventManager.PassNewTrigger(trans, EventTypes.EventType.NewTransaction);
         }
 
         public void StartWalletLoop()

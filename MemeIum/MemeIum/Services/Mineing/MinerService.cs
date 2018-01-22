@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Security.Permissions;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using MemeIum.Misc;
 using MemeIum.Misc.Transaction;
 using MemeIum.Services.Blockchain;
@@ -23,6 +24,7 @@ namespace MemeIum.Services.Mineing
         public ObservableCollection<Transaction> MemPool { get; set; }
         public List<Thread> CurrentWorkers { get; set; }
         public static Dictionary<int, bool> Terminators;
+        public static int atId = 0;
 
         private IBlockChainService _blockChainService;
         private IDifficultyService _difficultyService;
@@ -50,7 +52,14 @@ namespace MemeIum.Services.Mineing
             CurrentWorkers = new List<Thread>();
             Terminators = new Dictionary<int, bool>();
 
-            TryRestartingWorkers();
+            Task.Run(delegate
+            {
+                _logger.Log("Starting first miner in 6..");
+                Thread.Sleep(3000);
+                _logger.Log("Starting first miner in 3..");
+                Thread.Sleep(3000);
+                TryRestartingWorkers();                
+            });
         }
 
         public void TryRestartingWorkers()
@@ -138,6 +147,14 @@ namespace MemeIum.Services.Mineing
             return bHash <= target;
         }
 
+        private List<Transaction> SelfTrans()
+        {
+            var tt = _walletService.AssembleTransaction(_walletService.Address, 1, "generate mims");
+            if (tt != null)
+                return new List<Transaction>(){tt};
+            return new List<Transaction>();
+        }
+
         private void Miner()
         {
             var id = Thread.CurrentThread.ManagedThreadId;
@@ -150,12 +167,15 @@ namespace MemeIum.Services.Mineing
             {
                 Terminators.Add(id, false);
             }
-
+            List<Transaction> choosenTxs;
             if (MemPool.Count == 0)
             {
                 return;
             }
-
+            else
+            {
+                choosenTxs = ChooseTxs();
+            }
             var nounce = GenerateRandomString();
             var newInfo = new BlockInfo()
             {
@@ -166,7 +186,6 @@ namespace MemeIum.Services.Mineing
             };
             var target = _difficultyService.TargetForBlock(newInfo);
             var targetString =Convert.ToBase64String( target.ToByteArray());
-            var choosenTxs = ChooseTxs();
             _logger.Log($"Choosen for mine : {choosenTxs.Count}");
             foreach (var transaction in choosenTxs)
             {
@@ -236,6 +255,7 @@ namespace MemeIum.Services.Mineing
             {
                 var th = new Thread(new ThreadStart(Miner));
                 th.Start();
+                Thread.Sleep(30);
             }
         }
 

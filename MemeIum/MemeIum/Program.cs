@@ -55,12 +55,12 @@ namespace MemeIum
             Services.Services.RegisterSingeleton<IEventManager,EventManager>();
 
             Services.Services.RegisterSingeleton<IBlockVerifier,BlockVerifier>();
-            Services.Services.RegisterSingeleton<IWalletService,WalletService>();
             Services.Services.RegisterSingeleton<IBlockChainService,BlockChainService>();
             Services.Services.RegisterSingeleton<IDifficultyService,DifficultyService>();
             Services.Services.RegisterSingeleton<IMinerService,MinerService>();
 
             Services.Services.RegisterSingeleton<ITransactionVerifier,TransactionVerifier>();
+            Services.Services.RegisterSingeleton<IWalletService,WalletService>();
             Services.Services.RegisterSingeleton<IP2PServer,P2PServer>();
             Services.Services.RegisterSingeleton<IMappingService,MappingService>();
             Services.Services.RegisterSingeleton<ICatchUpService,CatchUpService>();
@@ -77,6 +77,7 @@ namespace MemeIum
             //mck.FirstTarget();
             //mck.CreateNewOrigins();
             Configurations.MainThreadRunning = false;
+            Thread.Sleep(400);
             Environment.Exit(0);
         }
     }

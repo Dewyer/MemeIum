@@ -42,8 +42,9 @@ namespace MemeIum.Services.EmbededWebServer
             var cr = new CancellationToken();
             //_server.Listener.Start();
             _server.RunAsync(cr);
-            while (Running)
+            while (Configurations.MainThreadRunning)
             {
+                Thread.Sleep(100);
             }
             _server.Dispose();
         }

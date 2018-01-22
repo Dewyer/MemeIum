@@ -8,10 +8,12 @@ using Newtonsoft.Json;
 using System.Data;
 using System.Data.SQLite;
 using System.Linq;
+using System.Threading.Tasks;
 using MemeIum.Misc.Transaction;
 using MemeIum.Services.Eventmanagger;
 using MemeIum.Services.Mineing;
 using MemeIum.Services.Other;
+using MemeIum.Services.Wallet;
 
 namespace MemeIum.Services.Blockchain
 {
@@ -24,6 +26,7 @@ namespace MemeIum.Services.Blockchain
         private IEventManager _eventManager;
         private IMappingService _mappingService;
         private IMinerService _minerService;
+        private IWalletService _walletService;
 
         private string _blockChainPath;
         private string _blockChainFullPath;
@@ -48,6 +51,7 @@ namespace MemeIum.Services.Blockchain
             _eventManager.RegisterEventListener(OnNewBlock,EventTypes.EventType.NewBlock);
             _mappingService = Services.GetService<IMappingService>();
             _minerService = Services.GetService<IMinerService>();
+            _walletService = Services.GetService<IWalletService>();
 
             TryConnectToBlockInfoDb();
             TryLoadSavedInfo();
@@ -103,7 +107,20 @@ namespace MemeIum.Services.Blockchain
                 SaveLocalInfo();
                 CleanMemPool(block);
                 _minerService.TryRestartingWorkers();
-                _eventManager.PassNewTrigger(block,EventTypes.EventType.NewVerifiedBlock);
+                _eventManager.PassNewTrigger(block, EventTypes.EventType.NewVerifiedBlock);
+                Task.Run(delegate
+                {
+                    Task.Delay(2000).Wait();
+                    if (_minerService.MemPool.Count == 0 &&Configurations.CAKE_MODE)
+                    {
+                        _minerService.MemPool.Add(_walletService.AssembleTransaction(_walletService.Address, 1, "getme"));
+                        _minerService.TryRestartingWorkers();
+                    }
+                });
+            }
+            else
+            {
+                _logger.Log($"Got new shit block {block.Body.Id}");
             }
         }
 
@@ -177,7 +194,7 @@ namespace MemeIum.Services.Blockchain
         {
             _logger.Log("Calculateing new longest chain", 1);
             var cmd = _blockInfoDb.CreateCommand();
-            cmd.CommandText = "SELECT * FROM blockinfo ORDER BY height,createdatticks DESC;";
+            cmd.CommandText = "SELECT * FROM blockinfo ORDER BY height DESC;";
             var reader = cmd.ExecuteReader();
             if (reader.HasRows)
             {

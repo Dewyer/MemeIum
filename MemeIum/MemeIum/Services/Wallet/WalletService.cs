@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using MemeIum.Misc;
 using MemeIum.Misc.Transaction;
 using MemeIum.Requests;
+using MemeIum.Services.Eventmanagger;
+using MemeIum.Services.Other;
 using Newtonsoft.Json;
 
 namespace MemeIum.Services.Wallet
@@ -13,6 +16,7 @@ namespace MemeIum.Services.Wallet
     class WalletService : IWalletService, IService
     {
         public ILogger Logger;
+        private ITransactionVerifier _transactionVerifier;
         public string KeysFolderPath;
         public string PubKeysPath;
         public string PrivKeysPath;
@@ -50,6 +54,7 @@ namespace MemeIum.Services.Wallet
         public void Init()
         {
             Logger = Services.GetService<ILogger>();
+            _transactionVerifier = Services.GetService<ITransactionVerifier>();
             _provider = new RSACryptoServiceProvider(2048);
             KeysFolderPath = $"{Configurations.CurrentPath}\\Keys";
             PubKeysPath = $"{KeysFolderPath}\\pub.key";
@@ -138,6 +143,64 @@ namespace MemeIum.Services.Wallet
             };
 
             return req;
+        }
+
+        public Transaction AssembleTransaction(string to, float ammount, string msg)
+        {
+            var vouts = _transactionVerifier.GetAllTransactionVOutsForAddress(Address);
+            var balanceRips = vouts.Sum(r => r.Amount);
+            var balanceC = balanceRips / 100000f;
+            var amountInRips = (int)(ammount * 100000);
+
+            if (balanceC >= ammount)
+            {
+                var inps = new List<TransactionVIn>();
+
+                foreach (var vv in vouts)
+                {
+                    var tVin = new TransactionVIn()
+                    {
+                        FromBlockId = vv.FromBlock,
+                        OutputId = vv.Id
+                    };
+                    inps.Add(tVin);
+                }
+
+                var vout = new TransactionVOut()
+                {
+                    Amount = amountInRips,
+                    FromAddress = Address,
+                    ToAddress = to,
+
+                };
+                var selfVout = new TransactionVOut()
+                {
+                    Amount = balanceRips - amountInRips,
+                    FromAddress = Address,
+                    ToAddress = Address
+                };
+                TransactionVOut.SetUniqueIdForVOut(vout);
+                TransactionVOut.SetUniqueIdForVOut(selfVout);
+
+                var body = new TransactionBody()
+                {
+                    FromAddress = Address,
+                    Message = msg,
+                    PubKey = PubKey,
+                    VInputs = inps,
+                    VOuts = new List<InBlockTransactionVOut> { vout.GetInBlockTransactionVOut(), selfVout.GetInBlockTransactionVOut() }
+                };
+                TransactionBody.SetUniqueIdForBody(body);
+                var trans = MakeTransaction(body);
+
+                return trans;
+            }
+            else
+            {
+                Logger.Log("Insufficent funds when trying to make transaction!");
+            }
+            return null;
+
         }
     }
 

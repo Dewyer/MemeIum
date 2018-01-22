@@ -6,6 +6,5 @@ namespace MemeIum.Services.UI
 {
     interface IUI
     {
-
     }
 }

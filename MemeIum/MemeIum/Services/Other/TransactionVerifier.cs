@@ -256,6 +256,12 @@ namespace MemeIum.Services.Other
                 {
                     return false;
                 }
+
+                var cc = transaction.Body.VInputs.FindAll(r => r.OutputId == vin.OutputId).Count;
+                if (cc > 1)
+                {
+                    return false;
+                }
             }
 
             if (!VerifySum(transaction))
