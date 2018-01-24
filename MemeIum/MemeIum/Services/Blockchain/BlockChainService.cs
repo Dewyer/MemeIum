@@ -111,7 +111,7 @@ namespace MemeIum.Services.Blockchain
                 Task.Run(delegate
                 {
                     Task.Delay(2000).Wait();
-                    if (_minerService.MemPool.Count == 0 &&Configurations.CAKE_MODE)
+                    if (_minerService.MemPool.Count == 0 &&Configurations.Config.CM)
                     {
                         _minerService.MemPool.Add(_walletService.AssembleTransaction(_walletService.Address, 1, "getme"));
                         _minerService.TryRestartingWorkers();

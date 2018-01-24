@@ -24,7 +24,6 @@ namespace MemeIum.Services
         public const int CATCHUP_N = 5;
         public const int MAX_STR_LEN = 50;
         public const float MAX_TIME_BETWEEN_CATCHUP_RESP = 10;
-        public const bool CAKE_MODE = true;
 
         public const string GENESIS_BLOCK_ID = "sCOL48pO0Gbwo2sqqRe7nIoRrHIRBdAZILaIxarHBKA=";
 

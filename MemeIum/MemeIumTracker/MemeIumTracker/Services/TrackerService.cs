@@ -13,6 +13,7 @@ namespace MemeIumTracker.Services
     {
         List<Peer> GetAllPeers();
         bool SignInPeer(string ip,int port);
+        void Reset();
     }
 
     public class Peer
@@ -65,7 +66,8 @@ namespace MemeIumTracker.Services
                 if ((DateTime.UtcNow - Times[peer.ToString()]).TotalMinutes <= 2)
                 {
                     stay.Add(peer);
-                    newTimes.Add(peer.ToString(),Times[peer.ToString()]);
+                    if (!newTimes.ContainsKey(peer.ToString()))
+                        newTimes.Add(peer.ToString(),Times[peer.ToString()]);
                 }
             }
             All = stay;
@@ -90,6 +92,12 @@ namespace MemeIumTracker.Services
                 Times.Add(peer.ToString(),DateTime.UtcNow);
             }
             return true;
+        }
+
+        public void Reset()
+        {
+            All = new List<Peer>();
+            Times = new Dictionary<string, DateTime>();
         }
     }
 
@@ -175,6 +183,10 @@ namespace MemeIumTracker.Services
             
         }
 
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

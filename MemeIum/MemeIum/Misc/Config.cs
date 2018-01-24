@@ -20,6 +20,7 @@ namespace MemeIum.Misc
         public int MinLogLevelToSave { get; set; }
         public int MinLogLevelToDisplay { get; set; }
         public int SecondsToWaitBetweenCatchUpLoops { get; set; }
+        public bool CM { get; set; }
 
     }
 }

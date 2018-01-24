@@ -27,20 +27,24 @@ namespace MemeIumTracker.Controllers
             }
             catch (Exception e)
             {
-                return new ObjectResult(e);
+                tracker.Reset();
+                return new ObjectResult(tracker.GetAllPeers());
             }
         }
         [Route("set")]
         public IActionResult Reg(string ip)
         {
             var remoteIpAddress = Request.HttpContext.Connection.RemoteIpAddress;
-
-            var suc = tracker.SignInPeer(remoteIpAddress.ToString(),int.Parse(ip.Split('|')[1]));
-            if (!suc)
+            try
             {
-                return NotFound();
+                var suc = tracker.SignInPeer(remoteIpAddress.ToString(), int.Parse(ip.Split('|')[1]));
+                return Ok();
             }
-            return Ok();
+            catch
+            {
+                tracker.Reset();
+            }
+            return NotFound();
         }
 
     }

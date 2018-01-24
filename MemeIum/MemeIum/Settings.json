@@ -8,5 +8,6 @@
   "MaxThreadsToMineOn": 4,
   "SecondsToWaitBetweenCatchUpLoops": 3,
   "MinLogLevelToSave": 0,
-  "MinLogLevelToDisplay": 0
+  "MinLogLevelToDisplay": 0,
+  "CM": false 
 }
