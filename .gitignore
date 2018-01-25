@@ -5,6 +5,7 @@
 
 #mINES
 MemeIum/MemeIum/Environments/*
+MemeIum/MemeIumServices/MemeIumServices/appsettings.json
 
 # User-specific files
 *.suo

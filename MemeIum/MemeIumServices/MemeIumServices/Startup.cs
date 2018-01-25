@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MemeIumServices.DatabaseContexts;
 using MemeIumServices.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,6 +27,9 @@ namespace MemeIumServices
             services.AddMvc();
             services.AddSingleton<INodeComService, NodeComService>();
             services.AddSingleton<ITransactionUtil, TransactionUtil>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddDbContext<UASContext>(options =>
+                options.UseSqlServer(Configuration["Connection"]));
 
         }
 

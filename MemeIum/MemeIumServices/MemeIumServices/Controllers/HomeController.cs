@@ -15,10 +15,12 @@ namespace MemeIumServices.Controllers
     public class HomeController : Controller
     {
         private INodeComService nodeCom;
+        private IAuthService authService;
 
-        public HomeController(INodeComService _nodecom)
+        public HomeController(INodeComService _nodecom,IAuthService _authService)
         {
             nodeCom = _nodecom;
+            authService = _authService;
         }
 
         [HttpGet]
@@ -37,6 +39,30 @@ namespace MemeIumServices.Controllers
                 return new ObjectResult(new {succ="Transaction succesfully delivered"});
             }
             return new ObjectResult(new { error = true });
+        }
+
+        [HttpGet]
+        public IActionResult Login()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult DoLogin()
+        {
+            return authService.Login(Request.Form);
+        }
+
+        [HttpGet]
+        public IActionResult Register()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult DoRegister()
+        {
+            return authService.Register(Request.Form);
         }
 
         [HttpGet]
