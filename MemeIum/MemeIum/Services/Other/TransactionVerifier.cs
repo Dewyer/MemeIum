@@ -265,7 +265,7 @@ namespace MemeIum.Services.Other
                     return false;
                 }
 
-                if (ViolatesMemPool(vin))
+                if (ViolatesMemPool(transaction,vin))
                 {
                     return false;
                 }
@@ -285,10 +285,10 @@ namespace MemeIum.Services.Other
             return true;
         }
 
-        public bool ViolatesMemPool(TransactionVIn vin)
+        public bool ViolatesMemPool(Transaction trans,TransactionVIn vin)
         {
             var exists = _minerService.MemPool.ToList()
-                .TrueForAll(r => r.Body.VInputs.TrueForAll(x => x.OutputId != vin.OutputId));
+                .TrueForAll(r => r.Body.VInputs.TrueForAll(x => x.OutputId != vin.OutputId) || r.Body.TransactionId == trans.Body.TransactionId);
 
             return !exists;
         }
