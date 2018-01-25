@@ -108,7 +108,9 @@ namespace MemeIum.Services.Other
             var ts = new List<TransactionVOut>();
             while (reader.Read())
             {
-                ts.Add(TransactionVOut.GetVoutFromSqlReader(reader));
+                var trans = TransactionVOut.GetVoutFromSqlReader(reader);
+                if (_blockChainService.IsBlockInLongestChain(trans.FromBlock))
+                    ts.Add(trans);
             }
 
             return ts;
@@ -179,6 +181,12 @@ namespace MemeIum.Services.Other
                 Id=voutIn.Id,
                 ToAddress = voutIn.ToAddress
             };
+            var ss = GetUnspeTransactionVOut(vout.Id,out bool spent);
+            if (ss != null)
+            {
+                return;
+            }
+
             var cmd = vout.CreateInsertCommand();
             cmd.Connection = _unspentConnection;
             cmd.ExecuteNonQuery();
@@ -257,6 +265,11 @@ namespace MemeIum.Services.Other
                     return false;
                 }
 
+                if (ViolatesMemPool(vin))
+                {
+                    return false;
+                }
+
                 var cc = transaction.Body.VInputs.FindAll(r => r.OutputId == vin.OutputId).Count;
                 if (cc > 1)
                 {
@@ -270,6 +283,14 @@ namespace MemeIum.Services.Other
             }
 
             return true;
+        }
+
+        public bool ViolatesMemPool(TransactionVIn vin)
+        {
+            var exists = _minerService.MemPool.ToList()
+                .TrueForAll(r => r.Body.VInputs.TrueForAll(x => x.OutputId != vin.OutputId));
+
+            return !exists;
         }
 
         public bool LegalityCheck(Transaction transaction)

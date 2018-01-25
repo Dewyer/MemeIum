@@ -127,7 +127,7 @@ namespace MemeIum.Services.CatchUp
             return null;
         }
 
-        public bool DoesItReachDown(string id)
+        public bool IsBlockChainReachDown(string id)
         {
             var block = LoadBufferedBlock(id);
 
@@ -182,7 +182,7 @@ namespace MemeIum.Services.CatchUp
 
             if (shouldTryEnd)
             {
-                if (DoesItReachDown(supposedLongestBlockId))
+                if (IsBlockChainReachDown(supposedLongestBlockId))
                 {
                     CaughtUp = true;
                     LoadDataInOrder();

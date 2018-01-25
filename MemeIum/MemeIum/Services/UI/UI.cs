@@ -13,7 +13,10 @@ using Newtonsoft.Json;
 using MemeIum.Misc.Transaction;
 using MemeIum.Misc;
 using MemeIum.Requests;
+using MemeIum.Services.Blockchain;
+using MemeIum.Services.CatchUp;
 using MemeIum.Services.Eventmanagger;
+using Unosquare.Swan;
 
 namespace MemeIum.Services.UI
 {
@@ -26,6 +29,8 @@ namespace MemeIum.Services.UI
         private IWalletService _walletService;
         private IEventManager _eventManager;
         private IMappingService _mappingService;
+        private ICatchUpService _catchUpService;
+        private IBlockChainService _blockChainService;
 
         private int _indent;
         private int InIndent
@@ -50,6 +55,8 @@ namespace MemeIum.Services.UI
             _walletService = Services.GetService<IWalletService>();
             _eventManager = Services.GetService<IEventManager>();
             _mappingService = Services.GetService<IMappingService>();
+            _catchUpService = Services.GetService<ICatchUpService>();
+            _blockChainService = Services.GetService<IBlockChainService>();
 
             var textRes = $"{Configurations.CurrentPath}\\TextResources.json";
             res = JsonConvert.DeserializeObject<TextResources>(File.ReadAllText(textRes));
@@ -188,6 +195,32 @@ namespace MemeIum.Services.UI
 
         }
 
+        public void ReachDownTest()
+        {
+            var block = _blockChainService.LookUpBlockInfo(_blockChainService.Info.EndOfLongestChain);
+            var last = block.Stringify();
+
+            while (block.LastBlockId != Configurations.GENESIS_BLOCK_ID)
+            {
+                last = block.Stringify();
+                block = _blockChainService.LookUpBlockInfo(block.LastBlockId);
+                if (block == null)
+                {
+                    Console.WriteLine("[ReachDown]Chain does not reach down.");
+                    Console.WriteLine(last);
+                    break;
+                }
+            }
+            Console.WriteLine("[ReachDown]Chain does reach down.");
+
+        }
+
+        public void RunBlockchainTest()
+        {
+            _logger.Log($"Block chain test running ..");
+            ReachDownTest();
+        }
+
         public void StartMainLoop()
         {
             _logger.Log("Starting Console UI...");
@@ -217,6 +250,10 @@ namespace MemeIum.Services.UI
                 else if (cmdBody.StartsWith("addip"))
                 {
                     AddIp(cmdTokens);
+                }
+                else if (cmdBody.StartsWith("btest"))
+                {
+                    RunBlockchainTest();
                 }
                 else if (cmdBody.StartsWith("showp"))
                 {

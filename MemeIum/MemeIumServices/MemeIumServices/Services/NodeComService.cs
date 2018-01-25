@@ -101,6 +101,22 @@ namespace MemeIumServices.Services
             public bool ok { get; set; }
         }
 
+        public void CleanUpTransactionFiles()
+        {
+            var files = Directory.GetFiles(hostingEnvironment.WebRootPath+"/trans/");
+            foreach (var file in files)
+            {
+                var name = Path.GetFileName(file).Split('.')[0];
+                var ticks = long.Parse(name);
+                var timeOfC = new DateTime().AddTicks(ticks);
+
+                if ((DateTime.UtcNow - timeOfC).TotalDays >= 1)
+                {
+                    File.Delete(file);
+                }
+            }
+        }
+
         public bool SendTransaction(IFormCollection form)
         {
             UpdatePeers();
@@ -119,6 +135,7 @@ namespace MemeIumServices.Services
             }
 
             var trans = transactionUtil.GetTransactionFromForm(form,target,unspent);
+            CleanUpTransactionFiles();
             var id = SaveTransaction(trans);
 
             var resp = ReliableRequest($"api/sendtransaction/{hostname}/{id}");

@@ -105,26 +105,27 @@ namespace MemeIum.Services.Blockchain
                 }
                 Info.EditTime = DateTime.UtcNow;
                 SaveLocalInfo();
-                CleanMemPool(block);
+                ClearMemPool(block);
                 _minerService.TryRestartingWorkers();
                 _eventManager.PassNewTrigger(block, EventTypes.EventType.NewVerifiedBlock);
-                Task.Run(delegate
-                {
-                    Task.Delay(2000).Wait();
-                    if (_minerService.MemPool.Count == 0 &&Configurations.Config.CM)
-                    {
-                        _minerService.MemPool.Add(_walletService.AssembleTransaction(_walletService.Address, 1, "getme"));
-                        _minerService.TryRestartingWorkers();
-                    }
-                });
             }
             else
             {
                 _logger.Log($"Got new shit block {block.Body.Id}");
+                ClearMemPool(block);
             }
+            Task.Run(delegate
+            {
+                Task.Delay(2000).Wait();
+                if (_minerService.MemPool.Count == 0 &&Configurations.Config.CM)
+                {
+                    _minerService.MemPool.Add(_walletService.AssembleTransaction(_walletService.Address, 1, "getme"));
+                    _minerService.TryRestartingWorkers();
+                }
+            });
         }
 
-        public void CleanMemPool(Block block)
+        public void ClearMemPool(Block block)
         {            
             var tsNotOn = new List<Transaction>();
             foreach (var transaction in _minerService.MemPool)

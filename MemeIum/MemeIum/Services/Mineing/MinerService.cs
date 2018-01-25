@@ -52,6 +52,7 @@ namespace MemeIum.Services.Mineing
             CurrentWorkers = new List<Thread>();
             Terminators = new Dictionary<int, bool>();
 
+            return;
             Task.Run(delegate
             {
                 _logger.Log("Starting first miner in 6..");

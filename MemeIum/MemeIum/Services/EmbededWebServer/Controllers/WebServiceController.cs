@@ -40,7 +40,7 @@ namespace MemeIum.Services.EmbededWebServer.Controllers
         {
             try
             {
-                Console.WriteLine("[HTTPInfo]Got asked to balance.");
+                Console.WriteLine("[HTTPInfo]Got asked to balance {0}.",addr);
                 var vouts = _transactionVerifier.GetAllTransactionVOutsForAddress(addr);
                 return context.JsonResponse(vouts);
             }
@@ -81,11 +81,17 @@ namespace MemeIum.Services.EmbededWebServer.Controllers
                     if (_transactionVerifier.Verify(trans))
                     {
                         _eventManager.PassNewTrigger(trans, EventTypes.EventType.NewTransaction);
-                        context.Response.StatusCode = (int)HttpStatusCode.OK;
-                        return context.JsonResponse(new {ok=true});
+                        context.Response.StatusCode = (int) HttpStatusCode.OK;
+                        Console.WriteLine("[HTTPInfo]Asked transaction accepted.");
+                        return context.JsonResponse(new {ok = true});
+                    }
+                    else
+                    {
+                        Console.WriteLine("[HTTPInfo]Bad transaction");
                     }
                 }
-                context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                Console.WriteLine("[HTTPInfo]Asked transaction rejected.");
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
                 return context.JsonResponse(new {ok=false});
 
             }

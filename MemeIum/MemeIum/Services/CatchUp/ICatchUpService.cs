@@ -15,5 +15,6 @@ namespace MemeIum.Services.CatchUp
         void ParseCatcherUpRequest(CatcherUpRequest request,Peer from);
         void ParseCatchUpData(object data);
         void ParseDidICatchUp(DidICatchUpRequest request,Peer from);
+        bool IsBlockChainReachDown(string id);
     }
 }
