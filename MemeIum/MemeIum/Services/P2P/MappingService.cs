@@ -34,9 +34,14 @@ namespace MemeIum.Services
         private string _trackerSignUp = "http://memeiumtracker.azurewebsites.net/track/set?";
         private string externalIp;
 
+        public class IpJson
+        {
+            public string Ip { get; set; }
+        }
+
         public void Init()
         {
-            externalIp = new WebClient().DownloadString("http://icanhazip.com").Split('\n')[0];
+            externalIp = JsonConvert.DeserializeObject<IpJson>(new WebClient().DownloadString("https://api.ipify.org/?format=json")).Ip;
 
             _peersFullPath = Configurations.CurrentPath+"\\BlockChain\\Data\\Peers.json";
             _originsFullPath = Configurations.CurrentPath + "\\BlockChain\\Data\\Origins.json";

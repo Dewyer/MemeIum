@@ -452,7 +452,7 @@ namespace MemeIum.Services.Blockchain
         {
             var bb = new List<BlockInfo>();
             var atB = LookUpBlockInfo(Info.EndOfLongestChain);
-            while (atB.CreationTime >= fromtime)
+            while (atB.Id != tillId)
             {
                 bb.Add(atB);
                 if (atB.LastBlockId == "0")
