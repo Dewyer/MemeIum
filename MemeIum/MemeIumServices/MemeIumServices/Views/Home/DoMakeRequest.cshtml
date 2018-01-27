@@ -1,0 +1,13 @@
+﻿@model MemeIumServices.ViewModels.RequestOutputViewModel
+@{
+    ViewData["Title"] = "Payment Request";
+}
+
+<div class="container">
+    <h3>@Model.Title</h3>
+    <h4>@Model.Message</h4>
+    <h4>To Address : @Model.ToAddr</h4>
+    <p>Send this QR code or link to somone so they can pay you.)</p>
+    <a href="@Model.Url">@Model.Url</a>
+    <img src="/images/@Model.FileNameOfQr">
+</div>

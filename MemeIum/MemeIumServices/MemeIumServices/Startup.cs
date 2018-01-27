@@ -27,6 +27,7 @@ namespace MemeIumServices
             services.AddMvc();
             services.AddSingleton<INodeComService, NodeComService>();
             services.AddSingleton<ITransactionUtil, TransactionUtil>();
+            services.AddSingleton<IWalletUtil, WalletUtil>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddDbContext<UASContext>(options =>
                 options.UseSqlServer(Configuration["Connection"]));

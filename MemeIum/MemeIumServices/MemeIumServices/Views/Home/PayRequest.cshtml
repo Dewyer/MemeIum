@@ -1,0 +1,29 @@
+﻿@model MemeIumServices.ViewModels.RequestOutputViewModel
+@{
+    ViewData["Title"] = "Pay Request";
+}
+
+<div class="container">
+    <h2>Pay Request :</h2>
+    <h2>@Model.Title</h2>
+    <p>Transaction request details below:</p>
+    <form asp-controller="Home" asp-action="Send" method="post">
+        <p>Pay with: </p>
+        @await Component.InvokeAsync("WalletInfo", Model.User)
+        <div class="form-group">
+            <label for="msg">Message:</label>
+            <input type="text" class="form-control" id="msg" name="msg" value="@Model.Message">
+        </div>
+        <div class="form-group">
+            <div>
+                <label for="toaddr1">To Address:</label>
+                <input type="text" class="form-control" id="toaddr1" name="toaddr1" value="@Model.ToAddr">
+                <label for="ammount1">Ammount:</label>
+                <input type="number" class="form-control" id="ammount1" name="ammount1" value="@Model.Ammount">
+            </div>
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-success" id="sender">Send Transaction</button>
+        </div>
+    </form>
+</div>

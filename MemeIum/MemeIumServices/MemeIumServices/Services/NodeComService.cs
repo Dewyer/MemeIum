@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using MemeIumServices.Models;
 using MemeIumServices.Models.Transaction;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -17,7 +18,7 @@ namespace MemeIumServices.Services
     public interface INodeComService
     {
         List<Peer> Peers { get; set; }
-        bool SendTransaction(IFormCollection form);
+        bool SendTransaction(User usr,Wallet wallet,IFormCollection form);
         void UpdatePeers();
         Task<string> ReliableRequest(string suburi);
         List<TransactionVOut> GetUnspentVOutsForAddress(string addr);
@@ -117,10 +118,17 @@ namespace MemeIumServices.Services
             }
         }
 
-        public bool SendTransaction(IFormCollection form)
+        public bool SendTransaction(User usr,Wallet wallet,IFormCollection form)
         {
             UpdatePeers();
-            var from = form["addr"].ToString();
+            var from = "";
+            if (form.ContainsKey("wallet"))
+            {
+                if (form["wallet"].ToString().Split('-').Length > 1)
+                {
+                    from = form["wallet"].ToString().Split('-')[1];
+                }
+            }
 
             var target = GetVoutsFromForm(form,from);
             var unspent = GetUnspentVOutsForAddress(from);
@@ -133,8 +141,11 @@ namespace MemeIumServices.Services
             {
                 return false;
             }
-
-            var trans = transactionUtil.GetTransactionFromForm(form,target,unspent);
+            var trans = transactionUtil.GetTransactionFromForm(wallet,usr,form,target,unspent);
+            if (trans == null)
+            {
+                return false;
+            }
             CleanUpTransactionFiles();
             var id = SaveTransaction(trans);
 

@@ -6,9 +6,18 @@ using Microsoft.AspNetCore.Http;
 
 namespace MemeIumServices.ViewModels
 {
-    public class FormErrorViewModel
+    public class RegisterFormErrorViewModel
     {
         public List<string> Errors { get; set; }
-        public IFormCollection OldForm { get; set; }
+        public string Email { get; set; }
+        public string PrivKey { get; set; }
+
+    }
+
+    public class LoginFormErrorViewModel
+    {
+        public List<string> Errors { get; set; }
+        public string Email { get; set; }
+        public string Message { get; set; }
     }
 }

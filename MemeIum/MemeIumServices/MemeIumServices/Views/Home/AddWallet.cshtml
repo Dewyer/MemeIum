@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Add Wallet";
+}
+
+<div class="container">
+    <h2>Create / Import new wallet.</h2>
+    <form asp-controller="Home" asp-action="DoAddWallet" method="post">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" class="form-control" id="name" name="name">
+        </div>
+        <div class="form-group">
+            <label for="privkey">Private key (If you already have one, if not leave this blank to generate one random):</label>
+            <textarea class="form-control" rows="5" id="privkey" name="privkey"></textarea>
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-success" id="sender">Add Wallet</button>
+        </div>
+    </form>
+</div>
+

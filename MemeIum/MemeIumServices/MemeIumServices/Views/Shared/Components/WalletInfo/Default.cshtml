@@ -1,0 +1,41 @@
+﻿@model MemeIumServices.ViewModels.WalletInfoViewModel
+@{
+    var firstName = Model.InfoList.Count > 0 ? Model.InfoList[0].Name : "";
+    var firstBal = Model.InfoList.Count > 0 ? Model.InfoList[0].Balance.ToString() : "";
+    var firstAddr = Model.InfoList.Count > 0 ? Model.InfoList[0].Address : "";
+
+}
+
+<div>
+    <div class="form-group">
+        <label for="wallet">Select Wallet :</label>
+        <select class="form-control" name="wallet" id="wallet" >
+            @for(var ii = 0; ii < Model.InfoList.Count;ii++)
+            {
+                @Html.Raw($"<option value='{ii}-{Model.InfoList[ii].Address}'>{Model.InfoList[ii].Name} <kbd>{Model.InfoList[ii].Balance} MIMs</kbd></option>")
+            }
+        </select>
+        <h3 id="wname">@firstName</h3>
+        <h5><label for="wbal">Balance: </label><kbd><span id="wbal">@firstBal</span> MIMs</kbd></h5>
+        <h5><label for="waddr">Address: </label><span class="text-muted" id="waddr" name="waddr">@firstAddr</span></h5>
+
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js"></script>
+<script>
+    var vm = null;
+    var displayNewInfo = function() {
+        var selected = $("#wallet").val().split("-");
+        var el = vm[parseInt(selected[0])];
+        $("#waddr").html(el["Address"]);
+        $("#wname").html(el["Name"]);
+        $("#wbal").html(el["Balance"]);
+    }
+
+    $(function() {
+        $("#wallet").change(displayNewInfo);
+        vm = $.parseJSON('@Html.Raw(Model.InfoJSON)');
+
+    });
+
+</script>

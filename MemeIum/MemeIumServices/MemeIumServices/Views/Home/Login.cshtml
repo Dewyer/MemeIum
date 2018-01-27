@@ -1,18 +1,31 @@
-﻿@{
+﻿@model MemeIumServices.ViewModels.LoginFormErrorViewModel
+@{
     ViewData["Title"] = "Login";
 }
 
 <div class="container">
     <h2>Login</h2>
+    <h3>@Html.Raw(Model.Message)</h3>
     <form asp-controller="Home" asp-action="DoLogin" method="post">
         <div class="form-group">
+            @{
+                if (Model?.Errors != null)
+                {
+                    foreach (var modelError in Model.Errors)
+                    {
+                        <p class="text-danger">@modelError</p>
+                    }
+                }
+            }
+        </div>
+        <div class="form-group">
             <label for="email">Email:</label>
-            <input type="email" class="form-control" id="email" name="email">
+            <input type="email" class="form-control" id="email" name="email" value="@Model.Email">
         </div>
         <div class="form-group">
             <label for="password">Password:</label>
             <input type="password" class="form-control" id="password" name="password">
-            <label class="checkbox-inline"><input type="checkbox" value="remember">Remember me</label>
+            <label class="checkbox-inline"><input type="checkbox" value="remember" id="remember" name="remember">Remember me</label>
         </div>
         <div class="form-group">
             <button type="submit" class="btn btn-success" id="sender">Login</button>

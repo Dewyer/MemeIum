@@ -1,0 +1,10 @@
+﻿@model MemeIumServices.ViewModels.ActionResultViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container">
+    <h2 class="@Model.TextClass">@Model.Title</h2>
+    <h3 class="@Model.TextClass">@Model.SubTitle</h3>
+    <button type="button" class="btn @Model.ButtonClass" onclick="window.location='@Model.ActionButtonLink'">@Model.ActionButtonText</button>
+</div>

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using MemeIumServices.DatabaseContexts;
+using MemeIumServices.Models;
 using MemeIumServices.Models.Transaction;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
@@ -13,28 +15,18 @@ namespace MemeIumServices.Services
     public interface ITransactionUtil
     {
         Transaction MakeTransaction(TransactionBody body, RSACryptoServiceProvider provider);
-        RSACryptoServiceProvider RsaFromString(string from);
-
-        Transaction GetTransactionFromForm(IFormCollection form, List<InBlockTransactionVOut> voutsDesired,
+        Transaction GetTransactionFromForm(Wallet wallet, User user,IFormCollection form, List<InBlockTransactionVOut> voutsDesired,
             List<TransactionVOut> unspent);
-
+        
     }
 
     public class TransactionUtil : ITransactionUtil
     {
-        public RSAParameters RsaParametersFromString(string str)
-        {
-            var sr = new System.IO.StringReader(str);
-            var xs = new System.Xml.Serialization.XmlSerializer(typeof(RSAParameters));
-            return (RSAParameters)xs.Deserialize(sr);
-        }
+        private IWalletUtil walletUtil;
 
-        public RSACryptoServiceProvider RsaFromString(string from)
+        public TransactionUtil(IWalletUtil walletUtil)
         {
-            var rsa = new RSACryptoServiceProvider();
-            rsa.ImportParameters(RsaParametersFromString(from));
-
-            return rsa;
+            this.walletUtil = walletUtil;
         }
 
         public Transaction MakeTransaction(TransactionBody body, RSACryptoServiceProvider provider)
@@ -53,12 +45,14 @@ namespace MemeIumServices.Services
             return req;
         }
 
-        public Transaction GetTransactionFromForm(IFormCollection form,List<InBlockTransactionVOut> voutsDesired,List<TransactionVOut> unspent)
+        public Transaction GetTransactionFromWallet(Wallet wallet,string msg, List<InBlockTransactionVOut> voutsDesired, List<TransactionVOut> unspent)
         {
-            var from = form["addr"].ToString();
-            var privKeyString = form["privkey"].ToString();
-            var rsa = RsaFromString(privKeyString);
+            var rsa = walletUtil.RsaFromString(wallet.KeyString);
+            return GetTransactionFromRsa(wallet.Address, msg, rsa, voutsDesired, unspent);
+        }
 
+        public Transaction GetTransactionFromRsa(string from,string msg,RSACryptoServiceProvider rsa, List<InBlockTransactionVOut> voutsDesired, List<TransactionVOut> unspent)
+        {
             var exponentStr = Convert.ToBase64String(rsa.ExportParameters(false).Exponent);
             var modulusStr = Convert.ToBase64String(rsa.ExportParameters(false).Modulus);
 
@@ -83,7 +77,7 @@ namespace MemeIumServices.Services
             var transactionBody = new TransactionBody()
             {
                 FromAddress = from,
-                Message = form["msg"].ToString(),
+                Message = msg,
                 PubKey = exponentStr + " " + modulusStr,
                 VInputs = vins,
                 VOuts = vouts
@@ -92,6 +86,29 @@ namespace MemeIumServices.Services
 
             var tt = MakeTransaction(transactionBody, rsa);
             return tt;
+
+        }
+
+        public Transaction GetTransactionFromForm(Wallet wallet,User user,IFormCollection form,List<InBlockTransactionVOut> voutsDesired,List<TransactionVOut> unspent)
+        {
+            var from = "";
+            if (form.ContainsKey("wallet"))
+            {
+                if (form["wallet"].ToString().Split('-').Length > 1)
+                {
+                    from = form["wallet"].ToString().Split('-')[1];
+                }
+            }
+            if (wallet == null)
+            {
+                return null;
+            }
+            if (wallet.OwnerId != user.UId)
+            {
+                return null;
+            }
+            var rsa = walletUtil.RsaFromString(wallet.KeyString);
+            return GetTransactionFromRsa(from,form["msg"].ToString(), rsa, voutsDesired, unspent);
         }
 
 

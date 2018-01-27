@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - MemeIumServices</title>
+    <title>@ViewData["Title"] - MemeIum</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
     <environment include="Development">
@@ -27,15 +27,19 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">MemeIumServices</a>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">MemeIum</a>
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
                     <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
                     <li><a asp-area="" asp-controller="Home" asp-action="Wallet">Wallet</a></li>
-                    <li><a asp-area="" asp-controller="Home" asp-action="Login">Login</a></li>
-                    <li><a asp-area="" asp-controller="Home" asp-action="Register">Register</a></li>
+                    <li><a asp-area="" asp-controller="Home" asp-action="AddWallet">Add Wallet</a></li>
+                    <li><a asp-area="" asp-controller="Home" asp-action="MakeRequest">Make Request</a></li>
 
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a asp-controller="Home" asp-action="Register"><span class="glyphicon glyphicon-user"></span> Register</a></li>
+                    <li><a asp-controller="Home" asp-action="Login"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
                 </ul>
             </div>
         </div>
@@ -44,7 +48,7 @@
         @RenderBody()
         <hr />
         <footer>
-            <p>&copy; 2018 - MemeIumServices</p>
+            <p>&copy; 2018 - MemeIum</p>
         </footer>
     </div>
 

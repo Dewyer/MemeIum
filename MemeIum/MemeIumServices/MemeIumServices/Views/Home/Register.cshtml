@@ -1,4 +1,4 @@
-﻿@model MemeIumServices.ViewModels.FormErrorViewModel
+﻿@model MemeIumServices.ViewModels.RegisterFormErrorViewModel
 @{
     ViewData["Title"] = "Register";
 }
@@ -9,19 +9,22 @@
     <form asp-controller="Home" asp-action="DoRegister" method="post">
         <div class="form-group">
             @{
-                foreach (var modelError in Model.Errors)
+                if (Model?.Errors != null)
                 {
-                    <p class="text-danger">@modelError</p>
+                    foreach (var modelError in Model.Errors)
+                    {
+                        <p class="text-danger">@modelError</p>
+                    }
                 }
             }
         </div>
         <div class="form-group">
             <label for="email">Email:</label>
-            <input type="email" class="form-control" id="email" name="email" value="@Model.OldForm["email"]">
+            <input type="email" class="form-control" id="email" name="email" value="@Model?.Email">
         </div>
         <div class="form-group">
             <label for="password">Password:</label>
-            <input type="password" class="form-control" id="password" name="password" value="@Model.OldForm["password"]">
+            <input type="password" class="form-control" id="password" name="password">
         </div>
         <div class="form-group">
             <label for="confirmpassword">Confirm Password:</label>
@@ -29,7 +32,7 @@
         </div>
         <div class="form-group">
             <label for="privkey">Private key (If you already have one, if not leave this blank):</label>
-            <textarea class="form-control" rows="5" id="privkey" name="privkey" value="@Model.OldForm["privkey"]"></textarea>
+            <textarea class="form-control" rows="5" id="privkey" name="privkey" >@Model?.PrivKey</textarea>
         </div>
         <div class="form-group">
             <button type="submit" class="btn btn-success" id="sender">Register</button>

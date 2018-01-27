@@ -11,8 +11,10 @@ namespace MemeIumServices.Models
         [MaxLength(50), MinLength(5)]
         public string Email { get; set; }
         public string HashedPassword { get; set; }
+        public string Salt { get; set; }
+
         [Key]
-        public Guid UId { get; set; }
+        public string UId { get; set; }
         public DateTime RegisteredTime { get; set; }
 
         public List<Wallet> Wallets { get; set; }
