@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MemeIum.Misc;
+using Newtonsoft.Json;
 
 namespace MemeIum.Services.P2P
 {
@@ -25,8 +26,8 @@ namespace MemeIum.Services.P2P
 
         public void ServerLoop()
         {
-            var externalip = new WebClient().DownloadString("http://icanhazip.com").Split('\n',' ')[0];
-            var epmy = IPAddress.Parse(externalip);
+            var externalIp = JsonConvert.DeserializeObject<MappingService.IpJson>(new WebClient().DownloadString("https://api.ipify.org/?format=json")).Ip;
+            var epmy = IPAddress.Parse(externalIp);
             Console.WriteLine("[Server]Me : "+epmy.AddressFamily.ToString());
             var ipep = new IPEndPoint(IPAddress.Any, Port);
             if (epmy.AddressFamily == AddressFamily.InterNetworkV6)
