@@ -118,7 +118,7 @@ namespace MemeIum.Services.CatchUp
         public Block LoadBufferedBlock(string id)
         {
             var newId = id.Replace('/', '-');
-            var file = $"{_catchDataFullPath}\\{newId}.json";
+            var file = $"{_catchDataFullPath}\\{newId}.block";
             if (File.Exists(file))
             {
                 var ss = File.ReadAllText(file);
@@ -131,7 +131,7 @@ namespace MemeIum.Services.CatchUp
         {
             var block = LoadBufferedBlock(id);
 
-            while (block.Body.Id != Configurations.GENESIS_BLOCK_ID)
+            while (block.Body.LastBlockId != _blockChainService.Info.EndOfLongestChain)
             {
                 block = LoadBufferedBlock(block.Body.LastBlockId);
                 if (block == null)
@@ -145,10 +145,10 @@ namespace MemeIum.Services.CatchUp
         public void ParseCatchUpData(object data)
         {
             LastGotResponse = DateTime.UtcNow;
-            
             if (data.GetType() == typeof(TransactionRequest))
             {
                 var trans = (TransactionRequest)data;
+                Console.WriteLine($"[K]Got Ketchup data T:{trans.Transaction.Body.TransactionId}");
 
                 if (!bufferedTransactions.Exists(r => r.Body.TransactionId == trans.Transaction.Body.TransactionId))
                 {
@@ -159,11 +159,12 @@ namespace MemeIum.Services.CatchUp
             else if (data.GetType() == typeof(BlockRequest))
             {
                 var block = (BlockRequest)data;
+                Console.WriteLine($"[K]Got Ketchup data B:{block.Block.Body.Id}");
 
                 if (!IsBlockBuffered(block.Block.Body.Id))
                 {
                     var newId = block.Block.Body.Id.Replace('/', '-');
-                    File.WriteAllText($"{_catchDataFullPath}\\{newId}.json",JsonConvert.SerializeObject(block.Block));
+                    File.WriteAllText($"{_catchDataFullPath}\\{newId}.block",JsonConvert.SerializeObject(block.Block));
 
                     if (block.Block.Body.Id == supposedLongestBlockId)
                     {
@@ -182,6 +183,7 @@ namespace MemeIum.Services.CatchUp
 
             if (shouldTryEnd)
             {
+                Console.WriteLine($"[K]Tried END! {supposedLongestBlockId}");
                 if (IsBlockChainReachDown(supposedLongestBlockId))
                 {
                     CaughtUp = true;
@@ -200,6 +202,7 @@ namespace MemeIum.Services.CatchUp
                 var name = tokens[tokens.Length - 1];
                 _logger.Log("Copied new block from catch : "+name);
                 File.Copy(file,$"{Configurations.CurrentPath}\\BlockChain\\Chain\\{name}");
+                File.Delete(file);
                 
             }
             //process blocks in order

@@ -1,0 +1,52 @@
+BlockVerifier:
+	TransVer
+	Dif
+	BlockChain
+	Miner
+	
+BlockChain:
+	TransVer
+	BlockVerifier
+	P2PServer
+	EventMana
+	Mapping
+	Miner
+	Wallet
+	
+Difi:
+	BlockChain
+
+Miner:
+	BlockChain
+	Dif
+	TransVer
+	EventMana
+	Wallet
+	
+TransVer:
+	BlockChain
+	Miner
+	Mapping
+	
+Wallet:
+	TransVer
+	
+P2PServer:
+	BlockChain
+	Ketchup
+	
+Mapping:
+	P2PServer
+	Ketchup
+	
+Ketchup:
+	BlockChain
+	Mapping
+	P2PServer
+	Miner
+	EventMana
+	
+Embeded:
+	Mapping
+	EventMana
+	TransVer

@@ -48,7 +48,7 @@ function getNewListElemntCode(ii) {
     out += "<div><button type='button' class='btn btn-danger' onclick='delListItem(" + ii + ")'>X</button>";
     out += "<label for='toaddr" + ii + "'>To Address:</label>";
     out += "<input type='text' class='form-control' id='toaddr" + ii + "' name='toaddr"+ii+"'>";
-    out += "<label for='ammount" + ii + "'>Ammount:</label>";
+    out += "<label for='ammount" + ii + "'>Amount:</label>";
     out += "<input type='number' class='form-control' id='ammount" + ii + "' name='ammount"+ii+"'></div>";
     return out;
 }

@@ -150,7 +150,7 @@ namespace MemeIum.Services.Wallet
             var vouts = _transactionVerifier.GetAllTransactionVOutsForAddress(Address);
             var balanceRips = vouts.Sum(r => r.Amount);
             var balanceC = balanceRips / 100000f;
-            var amountInRips = (int)(ammount * 100000);
+            var amountInRips = (long)(ammount * 100000);
 
             if (balanceC >= ammount)
             {

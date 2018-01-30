@@ -114,7 +114,7 @@ namespace MemeIum.Services
         public string FirstTarget()
         {
             var max = BigInteger.Pow(2, 251) -1;
-            var target = max* 1599;
+            var target = max* 3000;
             target /= 62500000;
             var b64 = Convert.ToBase64String(target.ToByteArray());
             return b64;
@@ -135,17 +135,15 @@ namespace MemeIum.Services
 
             var vouts = new List<InBlockTransactionVOut>();
             var toAddr = new List<string>(File.ReadAllLines(addresses));
-            foreach (var addr in toAddr)
+            var mevout = new TransactionVOut()
             {
-                var vout = new TransactionVOut()
-                {
-                    Amount = 10000,
-                    FromAddress = ww.Address,
-                    ToAddress = addr
-                };
-                TransactionVOut.SetUniqueIdForVOut(vout);
-                vouts.Add(vout.GetInBlockTransactionVOut());
-            }
+                Amount = 420000000,
+                FromAddress = ww.Address,
+                ToAddress = ww.Address
+            };
+            TransactionVOut.SetUniqueIdForVOut(mevout);
+            vouts.Add(mevout.GetInBlockTransactionVOut());
+
 
             var tBody = new TransactionBody()
             {

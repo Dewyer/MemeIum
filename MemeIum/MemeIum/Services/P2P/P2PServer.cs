@@ -19,7 +19,6 @@ namespace MemeIum.Services
         public ILogger Logger;
         private IBlockChainService _blockChainService;
         private ICatchUpService _catchUpService;
-        private IMappingService _mappingService;
 
         public Queue<Action> ToParseQueue { get; set; }
 
@@ -28,7 +27,6 @@ namespace MemeIum.Services
             Logger = Services.GetService<ILogger>();
             _blockChainService = Services.GetService<IBlockChainService>();
             _catchUpService = Services.GetService<ICatchUpService>();
-            _mappingService = Services.GetService<IMappingService>();
             ToParseQueue = new Queue<Action>();
             var parser = new Thread(new ThreadStart(ParserThread));
             parser.Start();

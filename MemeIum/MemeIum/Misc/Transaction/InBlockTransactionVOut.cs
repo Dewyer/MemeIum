@@ -10,7 +10,7 @@ namespace MemeIum.Misc.Transaction
     {
         public string FromAddress { get; set; }
         public string ToAddress { get; set; }
-        public int Amount { get; set; }
+        public long Amount { get; set; }
         public string Id { get; set; }
 
         public bool IsLegal()

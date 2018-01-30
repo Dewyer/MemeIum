@@ -92,7 +92,7 @@ namespace MemeIum.Services.Mineing
 
         public InBlockTransactionVOut GetMinerVOut(List<Transaction> transactions,int height)
         {
-            var fees = transactions.Sum(CalculateFee);
+            var fees = transactions.Sum(r=>CalculateFee(r));
             var vout = new TransactionVOut()
             {
                 Amount = fees + GetCurrentBlockReward(height),
@@ -114,7 +114,7 @@ namespace MemeIum.Services.Mineing
             return false;
         }
 
-        private int CalculateFee(Transaction t)
+        private long CalculateFee(Transaction t)
         {
             var inp = t.Body.VInputs.Sum(r => _transactionVerifier.GetUnspeTransactionVOut(r.OutputId,out bool spent).Amount);
             var outp = t.Body.VOuts.Sum(r => r.Amount);

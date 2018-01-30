@@ -13,7 +13,7 @@ namespace MemeIum.Misc
         public string FromBlock { get; set; }
         public string FromAddress { get; set; }
         public string ToAddress { get; set; }
-        public int Amount { get; set; }
+        public long Amount { get; set; }
         public string Id { get; set; }
 
         public InBlockTransactionVOut GetInBlockTransactionVOut()
@@ -37,8 +37,8 @@ namespace MemeIum.Misc
 
         public static TransactionVOut GetVoutFromSqlReader(SQLiteDataReader reader)
         {
-            int valueInt;
-            if (!int.TryParse(reader["amount"].ToString(), out valueInt))
+            long valueInt;
+            if (!long.TryParse(reader["amount"].ToString(), out valueInt))
             {
                 return null;
             }

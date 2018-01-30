@@ -201,6 +201,7 @@ namespace MemeIumServices.Services
         {
             using (var client = new HttpClient())
             {
+                client.Timeout = new TimeSpan(0,0,0,1,0);
                 var uri = new Uri($"http://{peer.Address}:{peer.Port + 1}/{subiro}");
                 var ss = await client.GetStringAsync(uri);
                 return ss;

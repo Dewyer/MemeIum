@@ -21,6 +21,6 @@ def createEnv(forport,istest=False):
     os.popen("start dotnet "+str(at)+"/MemeIum.dll "+str(forport)+" "+shuf)
 
 createEnv(8844)
-time.sleep(10)
-createEnv(9421)
+input()
+createEnv(4242)
 

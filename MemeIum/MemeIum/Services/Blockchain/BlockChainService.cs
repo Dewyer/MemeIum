@@ -313,8 +313,14 @@ namespace MemeIum.Services.Blockchain
         public bool WantedTransaction(InvitationRequest transInvitationRequest)
         {
             var atB = LookUpBlock(Info.EndOfLongestChain);
+            var lastB = atB.Body.LastBlockId;
             for (int ii = 0; ii < Configurations.TRANSACTION_WANT_LIMIT; ii++)
             {
+                if (atB == null)
+                {
+                    _logger.Log($"Nullblock : {lastB}");
+                    break;
+                }
                 foreach (var transaction in atB.Body.Tx)
                 {
                     if (transaction.Body.TransactionId == transInvitationRequest.DataId)
@@ -326,6 +332,7 @@ namespace MemeIum.Services.Blockchain
                 {
                     break;
                 }
+                lastB = atB.Body.LastBlockId;
                 atB = LookUpBlock(atB.Body.LastBlockId);
             }
 

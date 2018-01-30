@@ -63,7 +63,7 @@ namespace MemeIumTracker.Services
             var newTimes = new Dictionary<string,DateTime>();
             foreach (var peer in All)
             {
-                if ((DateTime.UtcNow - Times[peer.ToString()]).TotalMinutes <= 2)
+                if ((DateTime.UtcNow - Times[peer.ToString()]).TotalSeconds <= 10)
                 {
                     stay.Add(peer);
                     if (!newTimes.ContainsKey(peer.ToString()))
