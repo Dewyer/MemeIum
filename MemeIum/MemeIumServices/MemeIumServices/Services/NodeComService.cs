@@ -72,7 +72,7 @@ namespace MemeIumServices.Services
                         var to = form[$"toaddr{ii}"];
                         var vout = new TransactionVOut()
                         {
-                            Amount = (int)(am* 100000f),
+                            Amount = (long)(am* 100000f),
                             FromAddress = fromaddr,
                             ToAddress = to,
                             FromBlock = ""

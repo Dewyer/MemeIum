@@ -13,7 +13,7 @@ namespace MemeIumServices.Models.Transaction
         public string FromBlock { get; set; }
         public string FromAddress { get; set; }
         public string ToAddress { get; set; }
-        public int Amount { get; set; }
+        public long Amount { get; set; }
         public string Id { get; set; }
 
         public InBlockTransactionVOut GetInBlockTransactionVOut()
