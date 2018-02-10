@@ -1,0 +1,16 @@
+﻿@model User
+@{
+    
+}
+
+@if (Model == null)
+{
+    <li><a asp-controller="Home" asp-action="Register"><span class="glyphicon glyphicon-user"></span> Register</a></li>
+    <li><a asp-controller="Home" asp-action="Login"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+}
+else
+{
+    <li><a><span class="glyphicon glyphicon-log-in"></span> Logged in as: @Model.Email</a></li>
+    <li><a asp-controller="Home" asp-action="Login">Switch Account</a></li>
+
+}

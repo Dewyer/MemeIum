@@ -76,8 +76,9 @@ namespace MemeIumServices.Controllers
             }
             var oo = nodeCom.SendTransaction(usr,wallet,Request.Form);
             var suc = new ActionResultViewModel();
-            if (oo)
+            if (oo != null)
             {
+                walletUtil.SaveToHistory(oo,usr);
                 suc.Title = "Success !";
                 suc.SubTitle = "Transaction sent successfully!";
                 suc.TextClass = "text-success";
