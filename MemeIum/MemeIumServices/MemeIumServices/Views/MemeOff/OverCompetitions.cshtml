@@ -1,0 +1,27 @@
+﻿@model MemeIumServices.ViewModels.OverCompetitionsViewModel
+@{
+    ViewData["Title"] = "Old competitions";
+}
+
+<div class="container">
+    <h4>Lifetime prize pools: <kbd>@Model.LifeTimePrizes MIMs</kbd></h4>
+    <h4>All Meme Offs that are over: </h4>
+    @if (Model.OverCompetitions.Count == 0)
+    {
+        <h4>No competitions are over yet.</h4>
+    }
+    @foreach (var over in Model.OverCompetitions)
+    {
+        <div class="container">
+            <h4>@over.Competition.StartTime.ToLocalTime().ToString() - @over.Competition.EndTime.ToLocalTime().ToString() </h4>
+            <h4>Prize Pool was: <kbd>@over.TotalPrizePool MIMs</kbd></h4>
+            <h4>Winners :</h4>
+            <div class="container bg-success">
+                @foreach (var winner in over.Winners)
+                {
+                    @await Component.InvokeAsync("ApplicationStat",winner)
+                }
+            </div>
+        </div>
+    }
+</div>

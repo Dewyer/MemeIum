@@ -163,6 +163,9 @@ namespace MemeIumServices.Services
             if (request.Cookies["token"] != null)
             {
                 var tokenStr = request.Cookies["token"];
+                if (context.UserTokens.Where(r => r.Token == tokenStr).ToList().Count == 0)
+                    return null;
+
                 var tokenOb = context.UserTokens.First(r => r.Token == tokenStr);
                 if (tokenOb != null)
                 {

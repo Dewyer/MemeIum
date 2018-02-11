@@ -18,7 +18,6 @@ namespace MemeIumServices.DatabaseContexts
         public DbSet<Application> Applications { get; set; }
         public DbSet<Vote> Votes { get; set; }
 
-
         public MemeOffContext(DbContextOptions<MemeOffContext> options) : base(options)
         {
 

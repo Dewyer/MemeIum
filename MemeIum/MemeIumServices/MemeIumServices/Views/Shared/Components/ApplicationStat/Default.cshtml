@@ -1,0 +1,49 @@
+﻿@using MemeIumServices.ViewModels
+@using ZXing.QrCode.Internal
+@model MemeIumServices.ViewModels.ApplicationStatsViewModel
+@{
+    var voteurl = "/MemeOff/Vote?app="+Model.ApplicationId;
+
+    var maxW = 400;
+    var maxH = 700;
+
+    var newWidth = Model.ImageWidth;
+    var newHeight = Model.ImageHeight;
+    var asp = newWidth / newHeight;
+    var aspRec = newHeight / newWidth;
+
+    newWidth = maxW;
+    newHeight = aspRec * newWidth;
+
+    if (newHeight >= maxH)
+    {
+        newHeight = maxH;
+        newWidth = asp * newHeight;
+    }
+    var placement = "#"+Model.Placement.ToString();
+    if (Model.Placement == 0)
+    {
+        placement = "";
+    }
+}
+
+<div class="container" style="border: black; border-bottom-width: 1px;border-radius: 10px">
+    <h4>@placement @Model.Votes - @Model.Title</h4>
+    <h6>Created at: @Model.CreatedAt.ToLongTimeString()</h6>
+    <button type="button" class="btn btn-default" onclick="window.location = '@Model.TipUrl'">Tip!</button>
+    <img style="margin-top: 10px" class="img-responsive img-rounded" src="/MemeOff/@Model.ImageName" width="@newWidth" height="@newHeight">
+    <br>
+    @if (Model.Placement != 0)
+    {
+        @if (Model.VoteState == VoteState.VotedForThis)
+         {
+             <button type="button" class="btn btn-default" onclick="window.location = '@voteurl'" disabled="disabled">Vote</button>
+         }
+         else
+         {
+             <button type="button" class="btn btn-default" onclick="window.location = '@voteurl'">Vote!</button>
+         }
+    }
+
+</div>
+

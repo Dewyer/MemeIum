@@ -15,6 +15,7 @@ namespace MemeIumServices.Models
 
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
+        public DateTime LastPrizeUpdate { get; set; }
 
         public string PrizePoolJson { get; set; }
     }

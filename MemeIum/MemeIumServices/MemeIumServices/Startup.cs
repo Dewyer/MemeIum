@@ -27,13 +27,14 @@ namespace MemeIumServices
             services.AddMvc();
             services.AddSingleton<INodeComService, NodeComService>();
             services.AddSingleton<ITransactionUtil, TransactionUtil>();
-            services.AddScoped<IWalletUtil, WalletUtil>();
+            services.AddSingleton<IWalletUtil, WalletUtil>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddSingleton<IServerWalletService, ServerWalletService>();
+            services.AddScoped<ICompetitionService, CompetitionService>();
             services.AddDbContext<UASContext>(options =>
                 options.UseSqlServer(Configuration["Connection"]));
             services.AddDbContext<MemeOffContext>(options =>
-                options.UseSqlServer(Configuration["Connection"]));
+                options.UseSqlServer(Configuration["Connection2"]));
 
 
         }

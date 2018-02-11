@@ -35,7 +35,15 @@
                     <li><a asp-area="" asp-controller="Home" asp-action="Wallet">Wallet</a></li>
                     <li><a asp-area="" asp-controller="Home" asp-action="AddWallet">Add Wallet</a></li>
                     <li><a asp-area="" asp-controller="Home" asp-action="MakeRequest">Make Request</a></li>
-
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" >Meme Off
+                        <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a asp-controller="MemeOff" asp-action="Index">Current Contest</a></li>
+                            <li><a asp-controller="MemeOff" asp-action="OverCompetitions">Old Contests</a></li>
+                            <li><a asp-controller="MemeOff" asp-action="Application">Apply</a></li>
+                        </ul>
+                    </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     @await Component.InvokeAsync("LoginStatus")

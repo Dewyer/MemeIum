@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="wwwroot\MemeOff\" />
     <Folder Include="wwwroot\trans\" />
   </ItemGroup>
 

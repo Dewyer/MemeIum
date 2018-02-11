@@ -30,7 +30,6 @@ namespace MemeIumServices.DatabaseContexts
             modelBuilder.Entity<Wallet>().ToTable("Wallets");
             modelBuilder.Entity<HistoricalTransaction>().ToTable("HistoricalTransactions");
             modelBuilder.Entity<UserToken>().ToTable("UserTokens");
-
         }
     }
 }

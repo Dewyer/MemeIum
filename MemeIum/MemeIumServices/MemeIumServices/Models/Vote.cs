@@ -11,6 +11,7 @@ namespace MemeIumServices.Models
         [Key]
         public string VoteId { get; set; }
 
+        public string CompetitionId { get; set; }
         public string VoterUserId { get; set; }
         public DateTime VoteAt { get; set; }
         public string VoterIpAddress { get; set; }

@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
+using Newtonsoft.Json;
 
 namespace MemeIumServices.Controllers
 {
@@ -78,7 +79,16 @@ namespace MemeIumServices.Controllers
             var suc = new ActionResultViewModel();
             if (oo != null)
             {
-                walletUtil.SaveToHistory(oo,usr);
+                var ht = new HistoricalTransaction()
+                {
+                    State = TransactionState.NonVerified,
+                    TimeOfCreation = DateTime.UtcNow,
+                    TransactionId = oo.Body.TransactionId,
+                    TransactionJson = JsonConvert.SerializeObject(oo),
+                    User = usr
+                };
+                context.HistoricalTransactions.Add(ht);
+
                 suc.Title = "Success !";
                 suc.SubTitle = "Transaction sent successfully!";
                 suc.TextClass = "text-success";

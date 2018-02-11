@@ -1,0 +1,25 @@
+﻿@model User
+@{
+    ViewData["Title"] ="Application";
+}
+
+<div class="container">
+    <h2>Application</h2>
+    <p>Transaction request details below:</p>
+    <form asp-controller="MemeOff" asp-action="DoApplication" method="post" enctype="multipart/form-data">
+        <p>Get you possible rewards to address: </p>
+        @await Component.InvokeAsync("WalletInfo", Model)
+        <div class="form-group">
+            <label for="title">Title :</label>
+            <input type="text" class="form-control" id="title" name="Title">
+        </div>
+        <div class="form-group">
+            <label for="file">Image :</label>
+            <input type="file" class="form-control" id="file" name="Image" accept="image/*" />
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-success" id="sender">Send Application</button>
+        </div>
+    </form>
+</div>

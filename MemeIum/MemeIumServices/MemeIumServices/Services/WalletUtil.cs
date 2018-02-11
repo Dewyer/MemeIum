@@ -26,19 +26,15 @@ namespace MemeIumServices.Services
         Wallet WalletFromKey(string key, User user,string name);
         RSACryptoServiceProvider RsaFromString(string from);
         string SaveQrCode(string text);
-        void SaveToHistory(Transaction trans, User user);
-
     }
 
     public class WalletUtil : IWalletUtil
     {
         private IHostingEnvironment env;
-        private UASContext context;
 
-        public WalletUtil(IHostingEnvironment env, UASContext context)
+        public WalletUtil(IHostingEnvironment env)
         {
             this.env = env;
-            this.context = context;        
         }
 
         public string SaveQrCode(string text)
@@ -64,19 +60,6 @@ namespace MemeIumServices.Services
             var nameFP = env.WebRootPath + "/images/" + name + ".png";
             image.Save(nameFP);
             return name;
-        }
-
-        public void SaveToHistory(Transaction trans,User user)
-        {
-            var ht = new HistoricalTransaction()
-            {
-                State = TransactionState.NonVerified,
-                TimeOfCreation = DateTime.UtcNow,
-                TransactionId = trans.Body.TransactionId,
-                TransactionJson = JsonConvert.SerializeObject(trans),
-                User = user
-            };
-            context.HistoricalTransactions.Add(ht);
         }
 
         public RSAParameters RsaParametersFromString(string str)

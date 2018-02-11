@@ -1,2 +1,34 @@
-﻿@{
+﻿@model MemeIumServices.ViewModels.ActiveCompetitionViewModel
+@{
+    ViewData["Title"] = "Active Competition";
 }
+
+<div class="container">
+    <h3>Meme OFF!</h3>
+    <h4>Start time: @Model.StartTime.ToLocalTime().ToString()</h4>
+    <h4>End time: @Model.EndTime.ToLocalTime().ToString()</h4>
+    <h4>Total Prize Pool: <kbd>@Model.TotalPrizePool MIMs</kbd></h4>
+    <h5>Winners for now: </h5>
+    <div class="container bg-success text-white">
+        @if (Model.WinnerApplications.Count == 0)
+        {
+            <h5>No winner memes .... yet ;)</h5>
+        }
+        @foreach (var stat in Model.WinnerApplications)
+        {
+            @await Component.InvokeAsync("ApplicationStat", stat)
+        }
+    </div>
+    <h5>All other memes: </h5>
+    <div class="container">
+        @if (Model.Applications.Count == 0)
+        {
+            <h5>No memes .... yet ;)</h5>
+        }
+        @foreach (var stat in Model.Applications)
+        {
+            @await Component.InvokeAsync("ApplicationStat", stat)
+        }
+    </div>
+
+</div>
