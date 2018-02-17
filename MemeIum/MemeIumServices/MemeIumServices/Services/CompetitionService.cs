@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using MemeIumServices.DatabaseContexts;
+using MemeIumServices.Jobs;
 using MemeIumServices.Models;
+using MemeIumServices.Models.Transaction;
 using MemeIumServices.ViewModels;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -13,6 +15,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
+using Quartz;
 using SixLabors.ImageSharp;
 
 namespace MemeIumServices.Services
@@ -23,17 +26,24 @@ namespace MemeIumServices.Services
         ActiveCompetitionViewModel GetActiveCompetitionViewModel(User usr);
         bool VoteForApplication(User usr, string id, string ip);
         OverCompetitionsViewModel GetOverCompetitions();
+        void UpdatePrizePool();
+        void EndCompetition();
     }
 
     public class CompetitionService : ICompetitionService
     {
         private IHostingEnvironment _environment;
+        private INodeComService _nodeCom;
         private MemeOffContext _context;
+        private UASContext _uasContext;
+        private const string ServerAddr = "RMxURU0aPNU9psNDlgfP8QtXuG0l9udPEy7tzW8M3pg=";
 
-        public CompetitionService(IHostingEnvironment environment, MemeOffContext context)
+        public CompetitionService(IHostingEnvironment environment, MemeOffContext context, INodeComService nodeCom, UASContext uasContext)
         {
             this._environment = environment;
             this._context = context;
+            _nodeCom = nodeCom;
+            _uasContext = uasContext;
         }
 
         public bool IsFileOkay(string fname,out Image<Rgba32> img)
@@ -69,6 +79,13 @@ namespace MemeIumServices.Services
 
         public bool Apply(ApplicationViewModel model, User user)
         {
+            _context.Database.EnsureCreated();
+            var usrApps = _context.Applications.Where(r => r.OwnerId == user.UId).ToList();
+            if (usrApps.Count > 0)
+            {
+                return false;
+            }
+
             try
             {
                 var id = Guid.NewGuid().ToString();
@@ -133,7 +150,56 @@ namespace MemeIumServices.Services
             _context.Database.EnsureCreated();
             _context.Competitions.Add(comp);
             _context.SaveChanges();
+
+            if (JobScheduler.EndOfCompetition != null)
+            {
+                var newJob = JobBuilder.Create<EndOfCompetitionJob>();
+
+            }
             return comp;
+        }
+
+        public void EndCompetition()
+        {
+            var overs = _context.Competitions.Where(r=>r.EndTime<= DateTime.UtcNow).OrderBy(r=>r.EndTime).ToList();
+            overs.Reverse();
+            if (overs.Count == 0)
+            {
+                return;
+            }
+
+            var latest = overs[0];
+            if ((DateTime.UtcNow - latest.EndTime).TotalSeconds <= 10)
+            {
+                var prizes = JsonConvert.DeserializeObject<List<PrizeOffer>>(latest.PrizePoolJson);
+                _nodeCom.UpdatePeers();
+                var unspent = _nodeCom.GetUnspentVOutsForAddress(ServerAddr);
+
+                if (prizes.TrueForAll(r => unspent.Exists(x => x.Id == r.VoutId)))
+                {
+                    var winners = GetCompetitionWinners(latest.CompetitionId);
+                    var winnerApps = winners.Select(winner => _context.Applications.First(r => r.ApplicationId == winner.ApplicationId)).ToList();
+
+                    var totalPrize = prizes.Sum(r => r.Amount);
+                    var winnerShare = (long)((totalPrize / winnerApps.Count)*100000L);
+
+                    var desired = new List<InBlockTransactionVOut>();
+                    foreach (var application in winnerApps)
+                    {
+                        var vo = new TransactionVOut()
+                        {
+                            Amount = winnerShare,
+                            FromAddress = ServerAddr,
+                            ToAddress = application.RewardWallet
+                        };
+                        TransactionVOut.SetUniqueIdForVOut(vo);
+                        desired.Add(vo.GetInBlockTransactionVOut());
+                    }
+                    var wallet = _uasContext.Wallets.First(r=>r.Address == ServerAddr);
+                    var trans = _nodeCom.SendTransactionFromData(wallet,"Winners of MemeOff",desired,unspent);
+
+                }
+            }
         }
 
         public Competition GetActiveCompetitionOrCreateNewCompetition()
@@ -154,6 +220,16 @@ namespace MemeIumServices.Services
             qr = QueryHelpers.AddQueryString(qr, "msgt", "MemeOff Tip");
             qr = QueryHelpers.AddQueryString(qr, "amm", "1");
             qr = QueryHelpers.AddQueryString(qr, "addr", to);
+            return qr;
+        }
+
+        public string GetDonationUrl(string contest)
+        {
+            var qr = QueryHelpers.AddQueryString("/Home/PayRequest", "msgp",
+                "Thansk for your donation!");
+            qr = QueryHelpers.AddQueryString(qr, "msgt", $"memeoffdonation:{contest}");
+            qr = QueryHelpers.AddQueryString(qr, "amm", "1");
+            qr = QueryHelpers.AddQueryString(qr, "addr", ServerAddr);
             return qr;
         }
 
@@ -228,7 +304,8 @@ namespace MemeIumServices.Services
                 WinnerApplications = winners,
                 EndTime = ac.EndTime,
                 StartTime = ac.StartTime,
-                TotalPrizePool = prizePool.Sum(r=>r.Amount)
+                TotalPrizePool = prizePool.Sum(r=>r.Amount),
+                DonateUrl = GetDonationUrl(ac.CompetitionId)
             };
 
             return vm;
@@ -317,6 +394,52 @@ namespace MemeIumServices.Services
                 LifeTimePrizes = lifeTime,
                 OverCompetitions = overs
             };
+        }
+
+        public void UpdatePrizePool()
+        {
+            var curComp = GetActiveCompetitionOrCreateNewCompetition();
+
+            if ((DateTime.UtcNow - curComp.LastPrizeUpdate).TotalMinutes >= 2)
+            {
+                _nodeCom.UpdatePeers();
+                var unspent = _nodeCom.GetUnspentVOutsForAddress(ServerAddr);
+                if (unspent == null)
+                {
+                    unspent = new List<TransactionVOut>();
+                }
+                var prizePool = JsonConvert.DeserializeObject<List<PrizeOffer>>(curComp.PrizePoolJson);
+                var newPool = new List<PrizeOffer>();
+                newPool.AddRange(prizePool);
+
+                foreach (var transactionVOut in unspent)
+                {
+                    if (prizePool.FindAll(r => r.VoutId == transactionVOut.Id).Count == 0)
+                    {
+                        var msg = _nodeCom.GetMessageTransactionMessageFromVoutId(transactionVOut.Id);
+                        msg = msg.ToLower();
+
+                        if (msg.StartsWith("memeoffdonation:"))
+                        {
+                            var tokens = msg.Split(':');
+                            if (tokens.Length == 2)
+                            {
+                                var compId = tokens[1];
+                                if (compId == curComp.CompetitionId)
+                                {
+                                    var prizeOffer = new PrizeOffer(){Address = transactionVOut.FromAddress,Amount = (float)(transactionVOut.Amount/100000L),VoutId = transactionVOut.Id};
+                                    newPool.Add(prizeOffer);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                var newPoolJson = JsonConvert.SerializeObject(newPool);
+                curComp.PrizePoolJson = newPoolJson;
+                curComp.LastPrizeUpdate = DateTime.UtcNow;
+                _context.SaveChanges();
+            }
         }
     }
 }

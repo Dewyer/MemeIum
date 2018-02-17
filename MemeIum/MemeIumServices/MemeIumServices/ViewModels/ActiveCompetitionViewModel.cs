@@ -12,5 +12,6 @@ namespace MemeIumServices.ViewModels
         public float TotalPrizePool { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
+        public string DonateUrl { get; set; }
     }
 }

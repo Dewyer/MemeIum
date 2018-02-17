@@ -9,5 +9,6 @@ namespace MemeIumServices.Models
     {
         public string Address { get; set; }
         public float Amount { get; set; }
+        public string VoutId { get; set; }
     }
 }

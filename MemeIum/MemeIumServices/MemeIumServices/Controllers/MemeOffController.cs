@@ -41,10 +41,22 @@ namespace MemeIumServices.Controllers
             return View(usr);
         }
 
+        public IActionResult PrizePoolUpdate()
+        {
+            _competitionService.UpdatePrizePool();
+            return Ok();
+        }
+
         public IActionResult OverCompetitions()
         {
             var model = _competitionService.GetOverCompetitions();
             return View(model);
+        }
+
+        public IActionResult EndCompetition()
+        {
+            _competitionService.EndCompetition();
+            return Ok();
         }
 
         public IActionResult Vote(string app)

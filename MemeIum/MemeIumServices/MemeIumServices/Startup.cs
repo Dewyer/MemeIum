@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MemeIumServices.DatabaseContexts;
+using MemeIumServices.Jobs;
 using MemeIumServices.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -60,6 +61,8 @@ namespace MemeIumServices
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            JobScheduler.Start();
         }
     }
 }

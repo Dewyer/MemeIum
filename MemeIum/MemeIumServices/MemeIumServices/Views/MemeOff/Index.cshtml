@@ -7,7 +7,7 @@
     <h3>Meme OFF!</h3>
     <h4>Start time: @Model.StartTime.ToLocalTime().ToString()</h4>
     <h4>End time: @Model.EndTime.ToLocalTime().ToString()</h4>
-    <h4>Total Prize Pool: <kbd>@Model.TotalPrizePool MIMs</kbd></h4>
+    <h4>Total Prize Pool: <kbd>@Model.TotalPrizePool MIMs</kbd> <button type="button" class="btn btn-default" onclick="window.location.href='@Model.DonateUrl'">Donate</button></h4>
     <h5>Winners for now: </h5>
     <div class="container bg-success text-white">
         @if (Model.WinnerApplications.Count == 0)

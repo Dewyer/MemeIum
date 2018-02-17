@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using MemeIum.Misc.Transaction;
+using MemeIum.Services.Blockchain;
 using MemeIum.Services.Eventmanagger;
 using MemeIum.Services.Other;
 using MemeIum.Services.UI;
@@ -21,12 +24,14 @@ namespace MemeIum.Services.EmbededWebServer.Controllers
     class WebServiceController : WebApiController
     {
         private ITransactionVerifier _transactionVerifier;
+        private IBlockChainService _blockChainService;
         private IEventManager _eventManager;
 
         public WebServiceController()
         {
             _transactionVerifier = Services.GetService<ITransactionVerifier>();
             _eventManager = Services.GetService<IEventManager>();
+            _blockChainService = Services.GetService<IBlockChainService>();
         }
 
         [WebApiHandler(HttpVerbs.Any, "/test")]
@@ -100,6 +105,29 @@ namespace MemeIum.Services.EmbededWebServer.Controllers
                 return HandleError(context, ex, (int)HttpStatusCode.InternalServerError);
             }
         }
+
+        [WebApiHandler(HttpVerbs.Get, "/api/gettransmessage/{id}")]
+        public bool GetTransactionMessage(WebServer server, HttpListenerContext context, string id)
+        {
+            try
+            {
+                Console.WriteLine("[HTTPInfo]Got asked to Transaction message {0}",id);
+                var vout = _transactionVerifier.GetUnspeTransactionVOut(id, out bool spent);
+                if (vout == null)
+                {
+                    return context.JsonResponse(new {message = ""});
+                }
+
+                var block = _blockChainService.LookUpBlock(vout.FromBlock);
+                var tt = block.Body.Tx.FindAll(r => r.Body.VOuts.FindAll(l=>l.Id == id).Count > 0)[0];
+                return context.JsonResponse(new {message = tt.Body.Message});
+            }
+            catch (Exception ex)
+            {
+                return HandleError(context, ex, (int)HttpStatusCode.InternalServerError);
+            }
+        }
+
 
         protected bool HandleError(HttpListenerContext context, Exception ex, int statusCode = 500)
         {

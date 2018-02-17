@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using MemeIumServices.DatabaseContexts;
+using MemeIumServices.Jobs;
 using MemeIumServices.Models;
 using MemeIumServices.Models.Transaction;
 using Microsoft.AspNetCore.Hosting;
@@ -23,6 +24,10 @@ namespace MemeIumServices.Services
         void UpdatePeers();
         Task<string> ReliableRequest(string suburi);
         List<TransactionVOut> GetUnspentVOutsForAddress(string addr);
+        string GetMessageTransactionMessageFromVoutId(string id);
+
+        Transaction SendTransactionFromData(Wallet wallet, string msg, List<InBlockTransactionVOut> voutDesired,
+            List<TransactionVOut> unspent);
     }
 
     public class Peer
@@ -37,7 +42,7 @@ namespace MemeIumServices.Services
         private Random rng;
         private IHostingEnvironment hostingEnvironment;
         private ITransactionUtil transactionUtil;
-        private string hostname = "http://memeium.azurewebsites.net";
+        private string hostname = "http://localhost:53479";
 
         public NodeComService(IHostingEnvironment env,ITransactionUtil _transactionUtil)
         {
@@ -45,6 +50,7 @@ namespace MemeIumServices.Services
             transactionUtil = _transactionUtil;
             Peers = new List<Peer>();
             rng = new Random();
+            JobScheduler.WebAddress = hostname;
         }
 
         public void UpdatePeers()
@@ -142,18 +148,29 @@ namespace MemeIumServices.Services
                 return null;
             }
             var trans = transactionUtil.GetTransactionFromForm(wallet,usr,form,target,unspent);
+
+            return SendMadeTransaction(trans);
+        }
+
+        public Transaction SendMadeTransaction(Transaction trans)
+        {
             if (trans == null)
             {
                 return null;
             }
             CleanUpTransactionFiles();
             var id = SaveTransaction(trans);
-
             var resp = ReliableRequest($"api/sendtransaction/{hostname}/{id}");
             resp.Wait();
 
             var suc = JsonConvert.DeserializeObject<Ok>(resp.Result);
             return suc.ok ? trans : null;
+        }
+
+        public Transaction SendTransactionFromData(Wallet wallet,string msg,List<InBlockTransactionVOut> voutDesired,List<TransactionVOut> unspent)
+        {
+            var trans = transactionUtil.GetTransactionFromWallet(wallet,msg,voutDesired,unspent);
+            return SendMadeTransaction(trans);
         }
 
         public async Task<string> ReliableRequest(string suburi)
@@ -218,6 +235,23 @@ namespace MemeIumServices.Services
             //throw new Exception(resp.Result);
             var vouts = JsonConvert.DeserializeObject<List<TransactionVOut>>(resp.Result);
             return vouts;
+        }
+
+        public class MessageJson
+        {
+            public string message { get; set; }
+        }
+
+        public string GetMessageTransactionMessageFromVoutId(string id)
+        {
+            var resp = ReliableRequest($"api/gettransmessage/{id}");
+            resp.Wait();
+            if (resp.Result == "")
+            {
+                return "";
+            }
+            var msg = JsonConvert.DeserializeObject<MessageJson>(resp.Result);
+            return msg.message;
         }
     }
 }

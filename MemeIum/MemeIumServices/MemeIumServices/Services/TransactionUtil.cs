@@ -17,7 +17,13 @@ namespace MemeIumServices.Services
         Transaction MakeTransaction(TransactionBody body, RSACryptoServiceProvider provider);
         Transaction GetTransactionFromForm(Wallet wallet, User user,IFormCollection form, List<InBlockTransactionVOut> voutsDesired,
             List<TransactionVOut> unspent);
-        
+
+        Transaction GetTransactionFromRsa(string from, string msg, RSACryptoServiceProvider rsa,
+            List<InBlockTransactionVOut> voutsDesired, List<TransactionVOut> unspent);
+
+        Transaction GetTransactionFromWallet(Wallet wallet, string msg, List<InBlockTransactionVOut> voutsDesired,
+            List<TransactionVOut> unspent);
+
     }
 
     public class TransactionUtil : ITransactionUtil
