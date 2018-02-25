@@ -28,6 +28,7 @@ namespace MemeIumServices.Services
         OverCompetitionsViewModel GetOverCompetitions();
         void UpdatePrizePool();
         void EndCompetition();
+        void PayUnpaidPrizes();
     }
 
     public class CompetitionService : ICompetitionService
@@ -159,6 +160,23 @@ namespace MemeIumServices.Services
             return comp;
         }
 
+        public void SaveUnpaidPrize(Transaction trans)
+        {
+            var path = $"{_environment.ContentRootPath}\\MemeOff\\unpaidPrizes.json";
+            if (!File.Exists(path))
+            {
+                File.WriteAllText(path,"[]");
+            }
+
+            var content = File.ReadAllText(path);
+            var oldContent = JsonConvert.DeserializeObject<List<Transaction>>(content);
+            oldContent.Add(trans);
+            var newContent = JsonConvert.SerializeObject(oldContent);
+            File.WriteAllText(path,newContent);
+        }
+
+
+
         public void EndCompetition()
         {
             var overs = _context.Competitions.Where(r=>r.EndTime<= DateTime.UtcNow).OrderBy(r=>r.EndTime).ToList();
@@ -196,10 +214,49 @@ namespace MemeIumServices.Services
                         desired.Add(vo.GetInBlockTransactionVOut());
                     }
                     var wallet = _uasContext.Wallets.First(r=>r.Address == ServerAddr);
-                    var trans = _nodeCom.SendTransactionFromData(wallet,"Winners of MemeOff",desired,unspent);
+                    var suc = _nodeCom.SendTransactionFromData(wallet,"Winners of MemeOff",desired,unspent,out Transaction transaction);
+                    if (!suc)
+                    {
+                        Task.Run(() => SaveUnpaidPrize(transaction));
+                    }
 
                 }
             }
+        }
+
+        public void PayUnpaidPrizes()
+        {
+            var path = $"{_environment.ContentRootPath}\\MemeOff\\unpaidPrizes.json";
+            if (!File.Exists(path))
+            {
+                return;
+            }
+
+            var prizes = JsonConvert.DeserializeObject<List<Transaction>>(File.ReadAllText(path));
+            File.WriteAllText(path,"[]");
+            if (prizes.Count > 0)
+            {
+                var wallet = _uasContext.Wallets.First(r => r.Address == ServerAddr);
+                var desired = new List<InBlockTransactionVOut>();
+                var unspent = _nodeCom.GetUnspentVOutsForAddress(ServerAddr);
+
+                var serverBal = unspent.Sum(r => r.Amount);
+
+                foreach (var tran in prizes)
+                {
+                    desired.AddRange(tran.Body.VOuts);
+                }
+                var prizeBal = desired.Sum(r => r.Amount);
+
+                var suc = _nodeCom.SendTransactionFromData(wallet, "Winners of MemeOff", desired, unspent, out Transaction transaction);
+                if (!suc)
+                {
+                    Task.Run(() => SaveUnpaidPrize(transaction));
+                }
+
+            }
+
+            
         }
 
         public Competition GetActiveCompetitionOrCreateNewCompetition()

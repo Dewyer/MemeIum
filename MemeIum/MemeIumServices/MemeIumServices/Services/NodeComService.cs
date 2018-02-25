@@ -25,9 +25,12 @@ namespace MemeIumServices.Services
         Task<string> ReliableRequest(string suburi);
         List<TransactionVOut> GetUnspentVOutsForAddress(string addr);
         string GetMessageTransactionMessageFromVoutId(string id);
+        void OnNetworkOnline();
+        DateTime NetworkLastOnline { get; set; }
 
-        Transaction SendTransactionFromData(Wallet wallet, string msg, List<InBlockTransactionVOut> voutDesired,
-            List<TransactionVOut> unspent);
+        bool SendTransactionFromData(Wallet wallet, string msg, List<InBlockTransactionVOut> voutDesired,
+            List<TransactionVOut> unspent, out Transaction transaction);
+
     }
 
     public class Peer
@@ -43,14 +46,19 @@ namespace MemeIumServices.Services
         private IHostingEnvironment hostingEnvironment;
         private ITransactionUtil transactionUtil;
         private string hostname = "http://localhost:53479";
+        public DateTime NetworkLastOnline { get; set; }
+        public DateTime NetworkLastUpdateOnline { get; set; }
 
         public NodeComService(IHostingEnvironment env,ITransactionUtil _transactionUtil)
         {
+            JobScheduler.NodeComService = this;
             hostingEnvironment = env;
             transactionUtil = _transactionUtil;
             Peers = new List<Peer>();
             rng = new Random();
             JobScheduler.WebAddress = hostname;
+
+            NetworkLastOnline = DateTime.MinValue;
         }
 
         public void UpdatePeers()
@@ -167,10 +175,39 @@ namespace MemeIumServices.Services
             return suc.ok ? trans : null;
         }
 
-        public Transaction SendTransactionFromData(Wallet wallet,string msg,List<InBlockTransactionVOut> voutDesired,List<TransactionVOut> unspent)
+        public void OnNetworkOnline()
+        {
+            NetworkLastUpdateOnline = DateTime.UtcNow;
+            
+            if ((DateTime.UtcNow - NetworkLastOnline).TotalSeconds >= 10)
+            {
+                NetworkLastOnline = DateTime.UtcNow;
+
+                RequestPayUnpaidPrizes();
+                
+            }
+        }
+
+        public void RequestPayUnpaidPrizes()
+        {
+            Task.Run(delegate
+            {
+                using (var client = new HttpClient())
+                {
+                    var ss = client.GetStringAsync(new Uri($"{JobScheduler.WebAddress}/MemeOff/PayUnpaid"));
+                    ss.Wait();
+                }
+
+            });
+
+        }
+
+        public bool SendTransactionFromData(Wallet wallet,string msg,List<InBlockTransactionVOut> voutDesired,List<TransactionVOut> unspent,out Transaction transaction )
         {
             var trans = transactionUtil.GetTransactionFromWallet(wallet,msg,voutDesired,unspent);
-            return SendMadeTransaction(trans);
+            var suc = SendMadeTransaction(trans);
+            transaction = trans;
+            return suc != null;
         }
 
         public async Task<string> ReliableRequest(string suburi)

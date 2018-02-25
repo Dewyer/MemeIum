@@ -59,6 +59,12 @@ namespace MemeIumServices.Controllers
             return Ok();
         }
 
+        public IActionResult PayUnpaid()
+        {
+            _competitionService.PayUnpaidPrizes();
+            return Ok();
+        }
+
         public IActionResult Vote(string app)
         {
             var usr = _authService.GetAuthUser(Request, Response);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MemeIumServices.Services;
 using Quartz;
 using Quartz.Impl;
 
@@ -13,6 +14,8 @@ namespace MemeIumServices.Jobs
         public static IJobDetail PrizePoolUpdater;
         public static IJobDetail EndOfCompetition;
         public static string WebAddress = "";
+
+        public static INodeComService NodeComService;
 
         public static async void Start()
         {
@@ -28,7 +31,17 @@ namespace MemeIumServices.Jobs
                     .RepeatForever())
                 .Build();
 
+            var peerUpdate = JobBuilder.Create<PeerUpdaterJob>().Build();
+            ITrigger peerTrigger = TriggerBuilder.Create()
+                .WithIdentity("PeerUpdate", "PeerUpdate")
+                .StartNow()
+                .WithSimpleSchedule(x => x
+                    .WithIntervalInSeconds(10)
+                    .RepeatForever())
+                .Build();
+
             Scheduler.ScheduleJob(job, trigger);
+            Scheduler.ScheduleJob(peerUpdate, peerTrigger);
             PrizePoolUpdater = job;
             //
         }
