@@ -2,6 +2,8 @@
 MemeIum is a new cryptocurrency.
 It is currently developed by Me (Barnabás Rátki) and soon some more guys.
 
+How to install: https://github.com/Dewyer/MemeIum/blob/master/HowToInstall.txt
+
 It is fun XD
 
 Advantages of MemeIum:
