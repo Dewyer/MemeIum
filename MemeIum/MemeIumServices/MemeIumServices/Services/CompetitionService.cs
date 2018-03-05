@@ -198,6 +198,11 @@ namespace MemeIumServices.Services
                     var winners = GetCompetitionWinners(latest.CompetitionId);
                     var winnerApps = winners.Select(winner => _context.Applications.First(r => r.ApplicationId == winner.ApplicationId)).ToList();
 
+                    if (winnerApps.Count == 0)
+                    {
+                        return;
+                    }
+
                     var totalPrize = prizes.Sum(r => r.Amount);
                     var winnerShare = (long)((totalPrize / winnerApps.Count)*100000L);
 
