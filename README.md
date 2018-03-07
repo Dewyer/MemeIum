@@ -1,6 +1,6 @@
 # MemeIum
 MemeIum is a new cryptocurrency.
-It is currently developed by Me (Barnabás Rátki) and soon some more guys.
+It is currently developed by Me (Barnabás Rátki).
 
 How to install: https://github.com/Dewyer/MemeIum/blob/master/HowToInstall.txt
 
