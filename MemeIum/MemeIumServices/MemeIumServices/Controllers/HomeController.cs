@@ -254,6 +254,12 @@ namespace MemeIumServices.Controllers
         [HttpGet]
         public IActionResult AddWallet()
         {
+            var usr = authService.GetAuthUser(Request, Response);
+            if (usr == null)
+            {
+                return authService.UnAuthenticatedResult;
+            }
+
             return View();
         }
 
