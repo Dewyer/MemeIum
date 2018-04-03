@@ -2,6 +2,9 @@ How to install a full node on windows:
 	1. Get Dotnet: https://www.microsoft.com/net/download/thank-you/dotnet-sdk-2.1.4-windows-x64-installer
 	2. Download the latest release : Go to the repository and find the .RAR file with the highest version number
 	3. Put the contents in a folder
+	4. Edit the "Settings.json" file
+		1. Set "MainPort" to the port you want to use
+		2. Port forward that port in your router, and that port + 1 too (for example: mine is 4242, so I forwarded 4242 and 4243)
 	4. Run PowerShell in administrator mode
 	5. CD to the folder you downloaded the app into
 	6. Run "dotnet ./Memeium.dll"
