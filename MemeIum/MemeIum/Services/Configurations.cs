@@ -22,7 +22,7 @@ namespace MemeIum.Services
         public const int TRANSACTION_WANT_LIMIT = 20;
         public const int BLOCK_REWARD = 420000;
         public const int CATCHUP_N = 5;
-        public const int MAX_STR_LEN = 50;
+        public const int MAX_STR_LEN = 100;
         public const float MAX_TIME_BETWEEN_CATCHUP_RESP = 10;
 
         public const string GENESIS_BLOCK_ID = "FqIa5pnSBUQdY7aO8cKlAuF+mqId9lyI7AfxKtl1AHI=";

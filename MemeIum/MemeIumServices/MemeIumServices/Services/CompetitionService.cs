@@ -81,7 +81,8 @@ namespace MemeIumServices.Services
         public bool Apply(ApplicationViewModel model, User user)
         {
             _context.Database.EnsureCreated();
-            var usrApps = _context.Applications.Where(r => r.OwnerId == user.UId).ToList();
+            var ac = GetActiveCompetitionOrCreateNewCompetition();
+            var usrApps = _context.Applications.Where(r => r.OwnerId == user.UId && r.CompetitionId == ac.CompetitionId).ToList();
             if (usrApps.Count > 0)
             {
                 return false;
@@ -104,7 +105,6 @@ namespace MemeIumServices.Services
 
                 if (IsFileOkay(filename, out Image<Rgba32> img) && IsApplicationTitleAndWalletOkay(model))
                 {
-                    var ac = GetActiveCompetitionOrCreateNewCompetition();
                     var app = new Application()
                     {
                         ApplicationId = id,
@@ -152,11 +152,6 @@ namespace MemeIumServices.Services
             _context.Competitions.Add(comp);
             _context.SaveChanges();
 
-            if (JobScheduler.EndOfCompetition != null)
-            {
-                var newJob = JobBuilder.Create<EndOfCompetitionJob>();
-
-            }
             return comp;
         }
 
@@ -175,8 +170,6 @@ namespace MemeIumServices.Services
             File.WriteAllText(path,newContent);
         }
 
-
-
         public void EndCompetition()
         {
             var overs = _context.Competitions.Where(r=>r.EndTime<= DateTime.UtcNow).OrderBy(r=>r.EndTime).ToList();
@@ -187,7 +180,7 @@ namespace MemeIumServices.Services
             }
 
             var latest = overs[0];
-            if ((DateTime.UtcNow - latest.EndTime).TotalSeconds <= 10)
+            if ((DateTime.UtcNow - latest.EndTime).TotalSeconds <= 20)
             {
                 var prizes = JsonConvert.DeserializeObject<List<PrizeOffer>>(latest.PrizePoolJson);
                 _nodeCom.UpdatePeers();
@@ -225,6 +218,7 @@ namespace MemeIumServices.Services
                         Task.Run(() => SaveUnpaidPrize(transaction));
                     }
 
+                    var newC = GetActiveCompetitionOrCreateNewCompetition();
                 }
             }
         }
@@ -449,8 +443,14 @@ namespace MemeIumServices.Services
                     TotalPrizePool = pPoolAm,
                     Winners = GetCompetitionWinners(competition.CompetitionId)
                 };
-                overs.Add(over);
+
+                if (over.Winners.Count != 0 || pPoolAm != 0)
+                {
+                    overs.Add(over);
+                }
             }
+
+            overs = overs.OrderBy(x => x.Competition.StartTime).Reverse().ToList();
             return new OverCompetitionsViewModel()
             {
                 LifeTimePrizes = lifeTime,

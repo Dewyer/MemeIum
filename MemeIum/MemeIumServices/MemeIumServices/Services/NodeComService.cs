@@ -45,7 +45,7 @@ namespace MemeIumServices.Services
         private Random rng;
         private IHostingEnvironment hostingEnvironment;
         private ITransactionUtil transactionUtil;
-        private string hostname = "http://memeium.azurewebsites.net";
+        private string hostname = "http://localhost:53479";
         public DateTime NetworkLastOnline { get; set; }
         public DateTime NetworkLastUpdateOnline { get; set; }
 

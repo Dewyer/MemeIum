@@ -40,8 +40,15 @@ namespace MemeIumServices.Jobs
                     .RepeatForever())
                 .Build();
 
+            var endJob = JobBuilder.Create<EndOfCompetitionJob>().Build();
+            ITrigger endTrigger = TriggerBuilder.Create()
+                .WithIdentity("EndOfCompetition", "EndOfCompetition")
+                .StartNow()
+                .WithSimpleSchedule(x => x.WithIntervalInSeconds(10).RepeatForever()).Build();
+
             Scheduler.ScheduleJob(job, trigger);
             Scheduler.ScheduleJob(peerUpdate, peerTrigger);
+            Scheduler.ScheduleJob(endJob, endTrigger);
             PrizePoolUpdater = job;
             //
         }

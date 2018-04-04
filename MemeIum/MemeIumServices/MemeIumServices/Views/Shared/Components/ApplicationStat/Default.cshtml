@@ -29,7 +29,7 @@
 
 <div class="container" style="border: black; border-bottom-width: 1px;border-radius: 10px">
     <h4>@placement @Model.Votes - @Model.Title</h4>
-    <h6>Created at: @Model.CreatedAt.ToLongTimeString()</h6>
+    <h6>Created at: @Model.CreatedAt.ToLocalTime().ToString()</h6>
     <button type="button" class="btn btn-default" onclick="window.location = '@Model.TipUrl'">Tip!</button>
     <img style="margin-top: 10px" class="img-responsive img-rounded" src="/MemeOff/@Model.ImageName" width="@newWidth" height="@newHeight">
     <br>
