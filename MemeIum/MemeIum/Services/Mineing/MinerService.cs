@@ -45,7 +45,7 @@ namespace MemeIum.Services.Mineing
 
             _eventManager = Services.GetService<IEventManager>();
 
-            _memPoolFullPath = $"{Configurations.CurrentPath}\\BlockChain\\Data\\MemPool.json";
+            _memPoolFullPath = $"{Configurations.CurrentPath}/BlockChain/Data/MemPool.json";
             TryLoadMemPool();
             MemPool.CollectionChanged += MemPool_CollectionChanged;
 

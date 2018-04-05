@@ -29,7 +29,7 @@ namespace MemeIum.Services
 
         static Configurations()
         {
-            Config = JsonConvert.DeserializeObject<Config>(File.ReadAllText($"{CurrentPath}\\Settings.json"));
+            Config = JsonConvert.DeserializeObject<Config>(File.ReadAllText($"{CurrentPath}/Settings.json"));
         }
     }
 }

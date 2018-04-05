@@ -29,7 +29,7 @@ namespace MemeIum.Services.Other
         public void Init()
         {
             _logger = Services.GetService<ILogger>();
-            _unspentDbFullPath = $"{Configurations.CurrentPath}\\BlockChain\\Data\\Unspent.sqlite";
+            _unspentDbFullPath = $"{Configurations.CurrentPath}/BlockChain/Data/Unspent.sqlite";
 
             var ev = Services.GetService<IEventManager>();
             ev.RegisterEventListener(OnNewBlock,EventTypes.EventType.NewVerifiedBlock);
@@ -61,12 +61,12 @@ namespace MemeIum.Services.Other
 
         public void LoadEveryNewBlock()
         {
-            var chainPath = $"{Configurations.CurrentPath}\\BlockChain\\Chain\\";
+            var chainPath = $"{Configurations.CurrentPath}/BlockChain/Chain/";
             var blocks = Directory.GetFiles(chainPath);
 
             foreach (var block in blocks)
             {
-                var pathTokens = block.Split('\\');
+                var pathTokens = block.Split('/');
                 var id = pathTokens[pathTokens.Length - 1].Split('.')[0];
                 var bb = _blockChainService.LookUpBlock(id);
 

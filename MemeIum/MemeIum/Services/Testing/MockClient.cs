@@ -56,10 +56,10 @@ namespace MemeIum.Services
         {
             var wallet = Services.GetService<IWalletService>();
 
-            var pp = "C:\\Users\\gerge\\Documents\\MemeIum\\Keys";
-            var otherP = "C:\\Users\\gerge\\Documents\\MemeIum\\MemeIum\\MemeIum\\bin\\Debug\\netcoreapp2.0\\Keys";
+            var pp = "C:/Users/gerge/Documents/MemeIum/Keys";
+            var otherP = "C:/Users/gerge/Documents/MemeIum/MemeIum/MemeIum/bin/Debug/netcoreapp2.0/Keys";
 
-            var addresses = $"{pp}\\addr.txt";
+            var addresses = $"{pp}/addr.txt";
             var addrs = new List<string>();
 
             for (int ii = 0; ii < number; ii++)
@@ -99,7 +99,7 @@ namespace MemeIum.Services
 
         public void CreateNewOrigins()
         {
-            var _originsFullPath = Configurations.CurrentPath + "\\BlockChain\\Data\\Origins.json";
+            var _originsFullPath = Configurations.CurrentPath + "/BlockChain/Data/Origins.json";
             var origins = new List<Peer>()
             {
                 new Peer()
@@ -122,8 +122,8 @@ namespace MemeIum.Services
 
         public void CreateGenesis()
         {
-            var pp = "F:\\Projects\\MemeIum\\Keys";
-            var addresses = $"{pp}\\addr.txt";
+            var pp = "F:/Projects/MemeIum/Keys";
+            var addresses = $"{pp}/addr.txt";
 
             Logger.Log("Genesis tests", 1);
             var bb = Services.GetService<IBlockChainService>();

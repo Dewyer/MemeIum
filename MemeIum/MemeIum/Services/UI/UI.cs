@@ -58,7 +58,7 @@ namespace MemeIum.Services.UI
             _catchUpService = Services.GetService<ICatchUpService>();
             _blockChainService = Services.GetService<IBlockChainService>();
 
-            var textRes = $"{Configurations.CurrentPath}\\TextResources.json";
+            var textRes = $"{Configurations.CurrentPath}/TextResources.json";
             res = JsonConvert.DeserializeObject<TextResources>(File.ReadAllText(textRes));
 
             StartMainLoop();

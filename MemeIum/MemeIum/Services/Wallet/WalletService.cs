@@ -56,9 +56,9 @@ namespace MemeIum.Services.Wallet
             Logger = Services.GetService<ILogger>();
             _transactionVerifier = Services.GetService<ITransactionVerifier>();
             _provider = new RSACryptoServiceProvider(2048);
-            KeysFolderPath = $"{Configurations.CurrentPath}\\Keys";
-            PubKeysPath = $"{KeysFolderPath}\\pub.key";
-            PrivKeysPath = $"{KeysFolderPath}\\priv.key";
+            KeysFolderPath = $"{Configurations.CurrentPath}/Keys";
+            PubKeysPath = $"{KeysFolderPath}/pub.key";
+            PrivKeysPath = $"{KeysFolderPath}/priv.key";
 
             TryGenerateingNewkeys();
         }
@@ -89,8 +89,8 @@ namespace MemeIum.Services.Wallet
             var pubKeyString = StringFromRsaParam(_provider.ExportParameters(false));
             var privKeyString = StringFromRsaParam(_provider.ExportParameters(true));
 
-            File.WriteAllText($"{Configurations.CurrentPath}\\Keys\\pub.key",pubKeyString);
-            File.WriteAllText($"{Configurations.CurrentPath}\\Keys\\priv.key", privKeyString);
+            File.WriteAllText($"{Configurations.CurrentPath}/Keys/pub.key",pubKeyString);
+            File.WriteAllText($"{Configurations.CurrentPath}/Keys/priv.key", privKeyString);
         }
 
         public void LoadKeys()

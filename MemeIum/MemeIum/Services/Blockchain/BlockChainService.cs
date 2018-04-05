@@ -39,9 +39,9 @@ namespace MemeIum.Services.Blockchain
 
         public void Init()
         {
-            _blockChainPath = Configurations.CurrentPath + "\\BlockChain\\";
-            _blockChainFullPath = $"{_blockChainPath}\\Chain\\";
-            _blockInfoDbFullPath = _blockChainPath + "\\Data\\BlockInfo.sqlite";
+            _blockChainPath = Configurations.CurrentPath + "/BlockChain/";
+            _blockChainFullPath = $"{_blockChainPath}/Chain/";
+            _blockInfoDbFullPath = _blockChainPath + "/Data/BlockInfo.sqlite";
 
             _logger = Services.GetService<ILogger>();
             _transactionVerifier = Services.GetService<ITransactionVerifier>();
@@ -149,7 +149,7 @@ namespace MemeIum.Services.Blockchain
 
         public void TryLoadSavedInfo()
         {
-            var infoPath = $"{_blockChainPath}\\Data\\info.json";
+            var infoPath = $"{_blockChainPath}/Data/info.json";
             Info = null;
             if (File.Exists(infoPath))
             {
@@ -179,7 +179,7 @@ namespace MemeIum.Services.Blockchain
 
         public void SaveLocalInfo()
         {
-            var infoPath = $"{_blockChainPath}\\Data\\info.json";
+            var infoPath = $"{_blockChainPath}/Data/info.json";
             File.WriteAllText(infoPath,JsonConvert.SerializeObject(Info));
         }
 
@@ -215,7 +215,7 @@ namespace MemeIum.Services.Blockchain
         public Block LookUpBlock(string Id)
         {
             var newId = Id.Replace('/', '-');
-            var fileName = $"{_blockChainFullPath}\\{newId}.block";
+            var fileName = $"{_blockChainFullPath}/{newId}.block";
             if (File.Exists(fileName))
             {
                 var text = File.ReadAllText(fileName);
@@ -297,7 +297,7 @@ namespace MemeIum.Services.Blockchain
         public void SaveBlock(Block block)
         {
             var newId = block.Body.Id.Replace('/', '-');
-            var fileName = $"{_blockChainFullPath}\\{newId}.block";
+            var fileName = $"{_blockChainFullPath}/{newId}.block";
             if (!File.Exists(fileName))
             {
                 File.WriteAllText(fileName,JsonConvert.SerializeObject(block));

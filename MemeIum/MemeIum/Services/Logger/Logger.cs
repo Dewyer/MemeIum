@@ -23,18 +23,18 @@ namespace MemeIum.Services
             ToLogQuee = new List<string>();
             Task.Run(() => SaverLoop());
 
-            if (!Directory.Exists(Configurations.CurrentPath+"\\Logs"))
+            if (!Directory.Exists(Configurations.CurrentPath+"/Logs"))
             {
-                Directory.CreateDirectory(Configurations.CurrentPath+"\\Logs");
+                Directory.CreateDirectory(Configurations.CurrentPath+"/Logs");
             }
             var date = DateTime.Now.ToString("mm HH dd MM yyyy");
             var revision = 0;
-            LogPath = $"{Configurations.CurrentPath}\\Logs\\log-{date}-{revision}.log";
+            LogPath = $"{Configurations.CurrentPath}/Logs/log-{date}-{revision}.log";
 
             while (File.Exists(LogPath))
             {
                 revision++;
-                LogPath = $"{Configurations.CurrentPath}\\Logs\\log-{date}-{revision}.log";
+                LogPath = $"{Configurations.CurrentPath}/Logs/log-{date}-{revision}.log";
             }
 
             File.AppendAllText(LogPath,$"Created : {DateTime.Now.ToString("F")}\n");

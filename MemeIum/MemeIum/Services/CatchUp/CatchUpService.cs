@@ -43,7 +43,7 @@ namespace MemeIum.Services.CatchUp
             _eventManager = Services.GetService<IEventManager>();
             _blockChainService = Services.GetService<IBlockChainService>();
 
-            _catchDataFullPath = $"{Configurations.CurrentPath}\\BlockChain\\Catchup";
+            _catchDataFullPath = $"{Configurations.CurrentPath}/BlockChain/Catchup";
             _logger.Log("Ketchup started to flow ....",1);
             CaughtUp = false;
             bufferedTransactions = new List<Transaction>();
@@ -118,7 +118,7 @@ namespace MemeIum.Services.CatchUp
         public Block LoadBufferedBlock(string id)
         {
             var newId = id.Replace('/', '-');
-            var file = $"{_catchDataFullPath}\\{newId}.block";
+            var file = $"{_catchDataFullPath}/{newId}.block";
             if (File.Exists(file))
             {
                 var ss = File.ReadAllText(file);
@@ -164,7 +164,7 @@ namespace MemeIum.Services.CatchUp
                 if (!IsBlockBuffered(block.Block.Body.Id))
                 {
                     var newId = block.Block.Body.Id.Replace('/', '-');
-                    File.WriteAllText($"{_catchDataFullPath}\\{newId}.block",JsonConvert.SerializeObject(block.Block));
+                    File.WriteAllText($"{_catchDataFullPath}/{newId}.block",JsonConvert.SerializeObject(block.Block));
 
                     if (block.Block.Body.Id == supposedLongestBlockId)
                     {
@@ -198,10 +198,10 @@ namespace MemeIum.Services.CatchUp
             var files = Directory.GetFiles(_catchDataFullPath);
             foreach (var file in files)
             {
-                var tokens = file.Split('\\');
+                var tokens = file.Split('/');
                 var name = tokens[tokens.Length - 1];
                 _logger.Log("Copied new block from catch : "+name);
-                File.Copy(file,$"{Configurations.CurrentPath}\\BlockChain\\Chain\\{name}");
+                File.Copy(file,$"{Configurations.CurrentPath}/BlockChain/Chain/{name}");
                 File.Delete(file);
                 
             }

@@ -43,8 +43,8 @@ namespace MemeIum.Services
         {
             externalIp = JsonConvert.DeserializeObject<IpJson>(new WebClient().DownloadString("https://api.ipify.org/?format=json")).Ip;
 
-            _peersFullPath = Configurations.CurrentPath+"\\BlockChain\\Data\\Peers.json";
-            _originsFullPath = Configurations.CurrentPath + "\\BlockChain\\Data\\Origins.json";
+            _peersFullPath = Configurations.CurrentPath+"/BlockChain/Data/Peers.json";
+            _originsFullPath = Configurations.CurrentPath + "/BlockChain/Data/Origins.json";
 
             ThisPeer = new Peer(){Address = externalIp, Port=Configurations.Config.MainPort};
             RequestHeader.Me = ThisPeer;
